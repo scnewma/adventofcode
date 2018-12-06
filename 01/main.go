@@ -23,15 +23,13 @@ func main() {
 
 	// Part 2 - First duplicate frequency found
 
-	freqSeen := make(map[int]bool, 100)
+	freqSeen := map[int]bool{0: true}
 	currFreq := 0
-	freqSeen[0] = true
 	for {
 		for _, f := range frequencies {
 			currFreq += f
 
-			_, ok := freqSeen[currFreq]
-			if ok { // frequency has already been seen
+			if _, ok := freqSeen[currFreq]; ok {
 				fmt.Printf("First duplicate frequency is: %d\n", currFreq)
 				return
 			}
