@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 )
 
 func main() {
@@ -50,18 +48,13 @@ func parseFrequencies(filename string) ([]int, error) {
 	}
 
 	var frequencies []int
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		freq, err := strconv.Atoi(scanner.Text())
-		if err != nil {
-			return nil, fmt.Errorf("parsing frequency: %v", err)
+	for {
+		var freq int
+		if _, err := fmt.Fscanf(f, "%d", &freq); err != nil {
+			break
 		}
 
 		frequencies = append(frequencies, freq)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("reading frequencies: %v", err)
 	}
 
 	return frequencies, nil
