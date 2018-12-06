@@ -31,7 +31,11 @@ type Fabric [][]int
 func (f Fabric) AddClaim(c Claim) {
 	for i := c.TopStart; i < c.TopStart+c.Height; i++ {
 		for j := c.LeftStart; j < c.LeftStart+c.Width; j++ {
-			f[i][j] = f[i][j] + 1
+			if f[i][j] != 0 {
+				f[i][j] = -1
+			} else {
+				f[i][j] = c.ID
+			}
 		}
 	}
 }
@@ -40,12 +44,23 @@ func (f Fabric) Overlap() int {
 	overlap := 0
 	for i := 0; i < len(f); i++ {
 		for j := 0; j < len(f[i]); j++ {
-			if f[i][j] > 1 {
+			if f[i][j] == -1 {
 				overlap++
 			}
 		}
 	}
 	return overlap
+}
+
+func (f Fabric) Valid(c Claim) bool {
+	for i := c.TopStart; i < c.TopStart+c.Height; i++ {
+		for j := c.LeftStart; j < c.LeftStart+c.Width; j++ {
+			if f[i][j] != c.ID {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (f Fabric) Print() {
@@ -61,20 +76,29 @@ func main() {
 	}
 
 	fabric := newFabric(1000, 1000)
+	var claims []Claim
 	var id, left, top, width, height int
 	for {
 		if _, err := fmt.Fscanf(f, "#%d @ %d,%d: %dx%d", &id, &left, &top, &width, &height); err != nil {
 			break
 		}
-
-		fabric.AddClaim(Claim{
+		claim := Claim{
 			ID:        id,
 			LeftStart: left,
 			TopStart:  top,
 			Width:     width,
 			Height:    height,
-		})
+		}
+
+		claims = append(claims, claim)
+		fabric.AddClaim(claim)
 	}
 
 	fmt.Printf("Overlap: %d\n", fabric.Overlap())
+
+	for _, claim := range claims {
+		if fabric.Valid(claim) {
+			fmt.Printf("Non-overlapping claim: %d\n", claim.ID)
+		}
+	}
 }
