@@ -29,7 +29,7 @@ func main() {
 		for _, f := range frequencies {
 			currFreq += f
 
-			if _, ok := freqSeen[currFreq]; ok {
+			if freqSeen[currFreq] {
 				fmt.Printf("First duplicate frequency is: %d\n", currFreq)
 				return
 			}
