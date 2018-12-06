@@ -31,7 +31,9 @@ func main() {
 	events = createTimeline(events)
 	gSleepTimes := guardSleepTimes(events)
 	gid, maxMinute := mostMinutesAsleep(gSleepTimes)
-	fmt.Printf("Guard #%d - Slept most during minute: %d -> %d\n", gid, maxMinute, gid*maxMinute)
+	fmt.Printf("Guard #%d slept the most overall. Most often during minute: %d -> %d\n", gid, maxMinute, gid*maxMinute)
+	gid, maxMinute = mostFrequentMinuteAsleep(gSleepTimes)
+	fmt.Printf("Guard #%d slept the most frequently during minute %d -> %d\n", gid, maxMinute, gid*maxMinute)
 }
 
 type EventType int
@@ -135,6 +137,22 @@ func mostMinutesAsleep(gSleepTimes map[int][]int) (int, int) {
 	}
 
 	return maxGid, maxSleepMinute
+}
+
+func mostFrequentMinuteAsleep(gSleepTimes map[int][]int) (int, int) {
+	sleepMax := 0
+	maxGid := 0
+	maxMinute := 0
+	for gid, minutes := range gSleepTimes {
+		for minute, minuteSleep := range minutes {
+			if minuteSleep > sleepMax {
+				sleepMax = minuteSleep
+				maxGid = gid
+				maxMinute = minute
+			}
+		}
+	}
+	return maxGid, maxMinute
 }
 
 func mustAtoi(s string) int {
