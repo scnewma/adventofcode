@@ -29,18 +29,26 @@ func main() {
 
 func shortest(polymer string) string {
 	alpha := "abcdefghijklmnopqrstuvwxyz"
+	resultCh := make(chan string, len(alpha))
+	for _, r := range alpha {
+		go func(r rune) {
+			p := removeAll(polymer, string(r))
+			p = removeAll(p, string(unicode.ToUpper(r)))
+			resultCh <- reduce(p)
+		}(r)
+	}
 	min := ""
 	minlen := math.MaxInt64
-	for _, r := range alpha {
-		p := removeAll(polymer, string(r))
-		p = removeAll(p, string(unicode.ToUpper(r)))
-		p = reduce(p)
+	for i := 0; i < len(alpha); i++ {
+		p := <-resultCh
+
 		plen := len(p)
 		if plen < minlen {
 			minlen = plen
 			min = p
 		}
 	}
+
 	return min
 }
 
