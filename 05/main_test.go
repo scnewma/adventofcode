@@ -15,6 +15,27 @@ func TestReduce(t *testing.T) {
 	}
 }
 
+func TestShortest(t *testing.T) {
+	input := "dabAcCaCBAcCcaDA"
+
+	output := shortest(input)
+
+	if output != "daDA" {
+		t.Errorf("expected: daDA, got: %s\n", output)
+	}
+}
+
+func TestRemoveAll(t *testing.T) {
+	input := "dabAcCaCBAcCcaDA"
+
+	output := removeAll(input, "a")
+	output = removeAll(output, "A")
+
+	if output != "dbcCCBcCcD" {
+		t.Errorf("expected: dbcCCBcCcD, got %s\n", output)
+	}
+}
+
 func TestPolar(t *testing.T) {
 	tests := []struct {
 		a, b rune
