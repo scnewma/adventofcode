@@ -2,6 +2,7 @@ mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 
 fn main() {
     println!("Day 01:");
@@ -39,5 +40,14 @@ fn main() {
     println!(
         "  P2: {}",
         day04::part02(include_str!("../inputs/4.input.txt"))
+    );
+    println!("Day 05:");
+    println!(
+        "  P1: {}",
+        day05::part01(include_str!("../inputs/5.input.txt"))
+    );
+    println!(
+        "  P2: {}",
+        day05::part02(include_str!("../inputs/5.input.txt"))
     );
 }
