@@ -1,5 +1,12 @@
 use std::collections::HashSet;
 
+pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+    Ok(crate::SolveInfo {
+        part01: part01(input).to_string(),
+        part02: part02(input).to_string(),
+    })
+}
+
 pub fn part01(input: &str) -> u32 {
     let mut sum = 0;
     for line in input.lines() {
@@ -45,27 +52,30 @@ fn calc_priority(ch: char) -> u32 {
 mod tests {
     use super::*;
 
+    const SAMPLE: &'static str = include_str!("../inputs/3.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/3.input.txt");
+
     #[test]
     fn test_part_one_sample() {
-        let ans = part01(include_str!("../inputs/3.sample.txt"));
+        let ans = part01(SAMPLE);
         assert_eq!(157, ans);
     }
 
     #[test]
     fn test_part_one() {
-        let ans = part01(include_str!("../inputs/3.input.txt"));
+        let ans = part01(INPUT);
         assert_eq!(8515, ans);
     }
 
     #[test]
     fn test_part_two_sample() {
-        let ans = part02(include_str!("../inputs/3.sample.txt"));
+        let ans = part02(SAMPLE);
         assert_eq!(70, ans);
     }
 
     #[test]
     fn test_part_two() {
-        let ans = part02(include_str!("../inputs/3.input.txt"));
+        let ans = part02(INPUT);
         assert_eq!(2434, ans);
     }
 }

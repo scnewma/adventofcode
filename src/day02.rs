@@ -1,6 +1,13 @@
 use std::str::FromStr;
 
-pub fn part01(input: &str) -> i32 {
+pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+    Ok(crate::SolveInfo {
+        part01: part01(input).to_string(),
+        part02: part02(input).to_string(),
+    })
+}
+
+fn part01(input: &str) -> i32 {
     input
         .lines()
         .map(|line| line.split_once(' ').unwrap())
@@ -19,7 +26,7 @@ pub fn part01(input: &str) -> i32 {
         .sum()
 }
 
-pub fn part02(input: &str) -> i32 {
+fn part02(input: &str) -> i32 {
     input
         .lines()
         .map(|line| line.split_once(' ').unwrap())
@@ -111,27 +118,30 @@ impl FromStr for Move {
 mod tests {
     use super::*;
 
+    const SAMPLE: &'static str = include_str!("../inputs/2.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/2.input.txt");
+
     #[test]
     fn test_part_one_sample() {
-        let ans = part01(include_str!("../inputs/2.sample.txt"));
+        let ans = part01(SAMPLE);
         assert_eq!(15, ans);
     }
 
     #[test]
     fn test_part_one() {
-        let ans = part01(include_str!("../inputs/2.input.txt"));
+        let ans = part01(INPUT);
         assert_eq!(11475, ans);
     }
 
     #[test]
     fn test_part_two_sample() {
-        let ans = part02(include_str!("../inputs/2.sample.txt"));
+        let ans = part02(SAMPLE);
         assert_eq!(12, ans);
     }
 
     #[test]
     fn test_part_two() {
-        let ans = part02(include_str!("../inputs/2.input.txt"));
+        let ans = part02(INPUT);
         assert_eq!(16862, ans);
     }
 }

@@ -1,11 +1,18 @@
 use anyhow::Context;
 use std::{collections::VecDeque, str::FromStr};
 
-pub fn part01(input: &str) -> String {
+pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+    Ok(crate::SolveInfo {
+        part01: part01(input).to_string(),
+        part02: part02(input).to_string(),
+    })
+}
+
+fn part01(input: &str) -> String {
     solve(input, Model::CM9000)
 }
 
-pub fn part02(input: &str) -> String {
+fn part02(input: &str) -> String {
     solve(input, Model::CM9001)
 }
 
@@ -109,27 +116,30 @@ impl FromStr for Move {
 mod tests {
     use super::*;
 
+    const SAMPLE: &'static str = include_str!("../inputs/5.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/5.input.txt");
+
     #[test]
     fn test_part_one_sample() {
-        let ans = part01(include_str!("../inputs/5.sample.txt"));
+        let ans = part01(SAMPLE);
         assert_eq!("CMZ", ans);
     }
 
     #[test]
     fn test_part_one() {
-        let ans = part01(include_str!("../inputs/5.input.txt"));
+        let ans = part01(INPUT);
         assert_eq!("WSFTMRHPP", ans);
     }
 
     #[test]
     fn test_part_two_sample() {
-        let ans = part02(include_str!("../inputs/5.sample.txt"));
+        let ans = part02(SAMPLE);
         assert_eq!("MCD", ans);
     }
 
     #[test]
     fn test_part_two() {
-        let ans = part02(include_str!("../inputs/5.input.txt"));
+        let ans = part02(INPUT);
         assert_eq!("GSLCMFBRP", ans);
     }
 }

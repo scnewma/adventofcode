@@ -2,13 +2,20 @@ use std::str::FromStr;
 
 use anyhow::Context;
 
-pub fn part01(input: &str) -> usize {
+pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+    Ok(crate::SolveInfo {
+        part01: part01(input).to_string(),
+        part02: part02(input).to_string(),
+    })
+}
+
+fn part01(input: &str) -> usize {
     parse_input(input)
         .filter(|(i1, i2)| Interval::fully_overlaps(i1, i2))
         .count()
 }
 
-pub fn part02(input: &str) -> usize {
+fn part02(input: &str) -> usize {
     parse_input(input)
         .filter(|(i1, i2)| Interval::overlaps(i1, i2))
         .count()
@@ -52,27 +59,30 @@ fn parse_input(input: &str) -> impl Iterator<Item = (Interval, Interval)> + '_ {
 mod tests {
     use super::*;
 
+    const SAMPLE: &'static str = include_str!("../inputs/4.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/4.input.txt");
+
     #[test]
     fn test_part_one_sample() {
-        let ans = part01(include_str!("../inputs/4.sample.txt"));
+        let ans = part01(SAMPLE);
         assert_eq!(2, ans);
     }
 
     #[test]
     fn test_part_one() {
-        let ans = part01(include_str!("../inputs/4.input.txt"));
+        let ans = part01(INPUT);
         assert_eq!(651, ans);
     }
 
     #[test]
     fn test_part_two_sample() {
-        let ans = part02(include_str!("../inputs/4.sample.txt"));
+        let ans = part02(SAMPLE);
         assert_eq!(4, ans);
     }
 
     #[test]
     fn test_part_two() {
-        let ans = part02(include_str!("../inputs/4.input.txt"));
+        let ans = part02(INPUT);
         assert_eq!(956, ans);
     }
 }
