@@ -1,5 +1,5 @@
 use anyhow::Context;
-use std::{collections::VecDeque, str::FromStr};
+use std::str::FromStr;
 
 pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -26,7 +26,7 @@ fn solve(input: &str, model: Model) -> String {
     stacks
         .0
         .into_iter()
-        .filter_map(|mut stk| stk.pop_back())
+        .filter_map(|mut stk| stk.pop())
         .collect::<String>()
 }
 
@@ -36,27 +36,27 @@ enum Model {
 }
 
 #[derive(Debug)]
-struct Stacks(Vec<VecDeque<char>>);
+struct Stacks(Vec<Vec<char>>);
 
 impl Stacks {
     fn perform(&mut self, m: &Move, model: &Model) {
         match model {
             Model::CM9000 => {
                 for _ in 0..m.amt {
-                    let crt = self.0[m.from - 1].pop_back().unwrap();
-                    self.0[m.to - 1].push_back(crt);
+                    let crt = self.0[m.from - 1].pop().unwrap();
+                    self.0[m.to - 1].push(crt);
                 }
             }
             Model::CM9001 => {
                 // I'm sure there is a more efficient way to do this, but I'm running short on time
                 // atm. :)
-                let mut stk = VecDeque::new();
+                let mut stk = Vec::new();
                 for _ in 0..m.amt {
-                    let crt = self.0[m.from - 1].pop_back().unwrap();
-                    stk.push_back(crt);
+                    let crt = self.0[m.from - 1].pop().unwrap();
+                    stk.push(crt);
                 }
                 for _ in 0..m.amt {
-                    self.0[m.to - 1].push_back(stk.pop_back().unwrap());
+                    self.0[m.to - 1].push(stk.pop().unwrap());
                 }
             }
         }
@@ -71,14 +71,14 @@ impl FromStr for Stacks {
         let mut lines = s.lines().rev();
         // initialize stacks with correct size
         for _ in 0..lines.next().unwrap().chars().skip(1).step_by(4).count() {
-            stacks.push(VecDeque::new());
+            stacks.push(Vec::new());
         }
 
         for ln in lines {
             // skip initial whitespace
             for (idx, ch) in ln.chars().skip(1).step_by(4).enumerate() {
                 if ch != ' ' {
-                    stacks[idx].push_back(ch);
+                    stacks[idx].push(ch);
                 }
             }
         }
