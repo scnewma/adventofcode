@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::{fs, path::Path};
 
-const TEMPLATE: &'static str = r###"use crate::SolveInfo;
+const TEMPLATE: &str = r###"use crate::SolveInfo;
 
 pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {

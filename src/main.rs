@@ -6,6 +6,7 @@ mod day02;
 mod day03;
 mod day04;
 mod day05;
+mod day06;
 // GENERATE MODULE HEADER
 
 struct SolveInfo {
@@ -29,6 +30,7 @@ fn main() -> anyhow::Result<()> {
         day03::run,
         day04::run,
         day05::run,
+        day06::run,
         // GENERATE DAY FUNCTION
     ];
 

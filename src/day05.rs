@@ -3,8 +3,8 @@ use std::{collections::VecDeque, str::FromStr};
 
 pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
-        part01: part01(input).to_string(),
-        part02: part02(input).to_string(),
+        part01: part01(input),
+        part02: part02(input),
     })
 }
 
