@@ -29,20 +29,19 @@ fn part02(input: &str) -> anyhow::Result<u32> {
     let free_space = TOTAL_SPACE - *dir_sizes.get("/").context("missing root directory size")?;
     let free_space_needed = FREE_SPACE_NEEDED - free_space;
 
-    Ok(dir_sizes
+    dir_sizes
         .into_iter()
         .filter(|(_, size)| *size > free_space_needed)
         .map(|(_, size)| size)
         .min()
-        .context("why no min?")?)
+        .context("why no min?")
 }
 
 fn parse_input(input: &str) -> anyhow::Result<HashMap<String, u32>> {
     let mut dir_sizes = HashMap::new();
     dir_sizes.insert("/".to_string(), 0);
     let mut cwd = PathBuf::new();
-    let mut lines = input.lines();
-    while let Some(line) = lines.next() {
+    for line in input.lines() {
         let mut words = line.split_whitespace();
         match words.next().context("malformed line")? {
             "$" => {
