@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::SolveInfo;
 
 pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
@@ -10,54 +8,58 @@ pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
 }
 
 fn part01(input: &str) -> usize {
+    let mut grid: Vec<Vec<(u32, bool)>> = input
+        .lines()
+        .map(|line| {
+            line.chars()
+                .map(|ch| (ch.to_digit(10).unwrap(), false))
+                .collect::<Vec<(u32, bool)>>()
+        })
+        .collect();
     // build a point map
-    let mut trees = HashMap::new();
-    let mut width = 0;
-    let mut height = 0;
-    for (row, line) in input.lines().enumerate() {
-        for (col, tree) in line.chars().enumerate() {
-            trees.insert((row, col), tree.to_digit(10).unwrap());
-            width = col;
-        }
-        height = row;
-    }
-
-    let mut visible = HashMap::new();
+    // let mut trees = HashMap::new();
+    // let mut width = 0;
+    // let mut height = 0;
+    // for (row, line) in input.lines().enumerate() {
+    //     for (col, tree) in line.chars().enumerate() {
+    //         trees.insert((row, col), tree.to_digit(10).unwrap());
+    //         width = col;
+    //     }
+    //     height = row;
+    // }
 
     // top-left to bottom-right
     let deltas: [(i32, i32); 2] = [(-1, 0), (0, -1)];
     for (dr, dc) in deltas.into_iter() {
-        let mut tree_heights = trees.clone();
-        for row in 0..=height {
-            for col in 0..=width {
-                let point = (row, col);
-                let h = *trees.get(&point).unwrap();
-                let is_visible = *visible.get(&point).unwrap_or(&false);
+        let mut tree_heights = grid.clone();
+        for row in 0..grid.len() {
+            for col in 0..grid[0].len() {
+                let (h, is_visible) = grid[row][col];
                 let is_visible = is_visible
                     || row == 0
                     || col == 0
-                    || *tree_heights.get(&(add(row, dr), col)).unwrap() < h
-                    || *tree_heights.get(&(row, add(col, dc))).unwrap() < h;
-                visible.insert(point, is_visible);
+                    || tree_heights[add(row, dr)][col].0 < h
+                    || tree_heights[row][add(col, dc)].0 < h;
+                grid[row][col].1 = is_visible;
 
                 let maxh = [
                     Some(h),
                     if row == 0 {
                         None
                     } else {
-                        tree_heights.get(&(add(row, dr), col)).cloned()
+                        Some(tree_heights[add(row, dr)][col].0)
                     },
                     if col == 0 {
                         None
                     } else {
-                        tree_heights.get(&(row, add(col, dc))).cloned()
+                        Some(tree_heights[row][add(col, dc)].0)
                     },
                 ]
                 .into_iter()
-                .filter_map(|o| o)
+                .flatten()
                 .max()
                 .unwrap();
-                tree_heights.insert(point, maxh);
+                tree_heights[row][col].0 = maxh;
             }
         }
     }
@@ -65,34 +67,43 @@ fn part01(input: &str) -> usize {
     // bottom-right to top-left
     let deltas: [(i32, i32); 2] = [(1, 0), (0, 1)];
     for (dr, dc) in deltas.into_iter() {
-        let mut tree_heights = trees.clone();
-        for row in (0..=height).rev() {
-            for col in (0..=width).rev() {
-                let point = (row, col);
-                let h = *trees.get(&point).unwrap();
-                let is_visible = *visible.get(&point).unwrap_or(&false);
+        let mut tree_heights = grid.clone();
+        for row in (0..grid.len()).rev() {
+            for col in (0..grid[0].len()).rev() {
+                let (h, is_visible) = grid[row][col];
                 let is_visible = is_visible
-                    || row == height
-                    || col == width
-                    || *tree_heights.get(&(add(row, dr), col)).unwrap() < h
-                    || *tree_heights.get(&(row, add(col, dc))).unwrap() < h;
-                visible.insert(point, is_visible);
+                    || row == grid.len() - 1
+                    || col == grid[0].len() - 1
+                    || tree_heights[add(row, dr)][col].0 < h
+                    || tree_heights[row][add(col, dc)].0 < h;
+                grid[row][col].1 = is_visible;
 
                 let maxh = [
                     Some(h),
-                    tree_heights.get(&(add(row, dr), col)).cloned(),
-                    tree_heights.get(&(row, add(col, dc))).cloned(),
+                    if row == grid.len() - 1 {
+                        None
+                    } else {
+                        Some(tree_heights[add(row, dr)][col].0)
+                    },
+                    if col == grid[0].len() - 1 {
+                        None
+                    } else {
+                        Some(tree_heights[row][add(col, dc)].0)
+                    },
                 ]
                 .into_iter()
-                .filter_map(|o| o)
+                .flatten()
                 .max()
                 .unwrap();
-                tree_heights.insert(point, maxh);
+                tree_heights[row][col].0 = maxh;
             }
         }
     }
 
-    visible.into_iter().filter(|(_, vis)| *vis).count()
+    grid.into_iter()
+        .flat_map(|row| row.into_iter().map(|(_, v)| v).collect::<Vec<bool>>())
+        .filter(|v| *v)
+        .count()
 }
 
 fn part02(input: &str) -> u32 {
@@ -105,6 +116,7 @@ fn part02(input: &str) -> u32 {
         })
         .collect();
 
+    // brute force solution, i'm sure there is probably a memo solution
     let mut max = 0;
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
@@ -145,7 +157,7 @@ fn part02(input: &str) -> u32 {
 
 fn add(u: usize, i: i32) -> usize {
     if i.is_negative() {
-        u - i.abs() as usize
+        u - i.unsigned_abs() as usize
     } else {
         u + i as usize
     }
