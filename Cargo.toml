@@ -16,3 +16,5 @@ path = "src/bin/gen.rs"
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"] }
+itertools = "0.10.5"
+take-until = "0.1.0"

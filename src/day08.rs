@@ -1,4 +1,6 @@
 use crate::SolveInfo;
+use itertools::{iproduct, Either};
+use take_until::TakeUntilExt;
 
 pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
@@ -8,79 +10,66 @@ pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
 }
 
 fn part01(input: &str) -> usize {
-    let mut grid: Vec<Vec<(u32, bool)>> = input
+    #[derive(Clone)]
+    struct Tree {
+        height: u32,
+        visible: bool,
+    }
+    let mut grid: Vec<Vec<Tree>> = input
         .lines()
         .map(|line| {
             line.chars()
-                .map(|ch| (ch.to_digit(10).unwrap(), false))
-                .collect::<Vec<(u32, bool)>>()
+                .map(|ch| Tree {
+                    height: ch.to_digit(10).unwrap(),
+                    visible: false,
+                })
+                .collect()
         })
         .collect();
     let (height, width) = (grid.len(), grid[0].len());
 
-    // top-left to bottom-right
-    let deltas: [(i32, i32); 4] = [(-1, 0), (0, -1), (1, 0), (0, 1)];
-    for (dr, dc) in deltas.into_iter() {
+    for (dr, dc) in [(-1, 0), (0, -1), (1, 0), (0, 1)] {
         // tree heights is used as a memo for what we have seen previously in our grid iteration.
         // it tracks the greatest seen height in this row / col. if any tree in this row / col is
         // greater than the current tree's height then it isn't visible from the edge.
         let mut tree_heights = grid.clone();
-        let mut process = |row: usize, col: usize| {
-            let (h, is_visible) = grid[row][col];
-            let is_visible = is_visible
-                || row == 0
-                || row == height - 1
-                || col == 0
-                || col == width - 1
-                || tree_heights[add(row, dr)][col].0 < h
-                || tree_heights[row][add(col, dc)].0 < h;
-            grid[row][col].1 = is_visible;
 
-            let maxh = [
-                Some(h),
-                if row == 0 || row == height - 1 {
-                    None
-                } else {
-                    Some(tree_heights[add(row, dr)][col].0)
-                },
-                if col == 0 || col == width - 1 {
-                    None
-                } else {
-                    Some(tree_heights[row][add(col, dc)].0)
-                },
-            ]
-            .into_iter()
-            .flatten()
-            .max()
-            .unwrap();
-            tree_heights[row][col].0 = maxh;
-        };
-
-        // we need to either iterate top-left to bottom-right or bottom-right to top-left depending
-        // on what we need to memo
-        if dr == 1 || dc == 1 {
-            for row in (0..height).rev() {
-                for col in (0..width).rev() {
-                    process(row, col);
-                }
-            }
+        // if we are checking to the right or bottom then we need to iterate bottom-right to
+        // top-left instead of top-left to bottom-right because the memo needs to be built in that
+        // order to be useful
+        let should_reverse = dr == 1 || dc == 1;
+        let points = if should_reverse {
+            Either::Left(iproduct!((0..height).rev(), (0..width).rev()))
         } else {
-            for row in 0..height {
-                for col in 0..width {
-                    process(row, col);
-                }
+            Either::Right(iproduct!(0..height, 0..width))
+        };
+        for (row, col) in points {
+            let mut tree = grid[row].get_mut(col).unwrap();
+            tree.visible = tree.visible
+                || !(1..height - 1).contains(&row)
+                || !(1..width - 1).contains(&col)
+                || tree_heights[add(row, dr)][col].height < tree.height
+                || tree_heights[row][add(col, dc)].height < tree.height;
+
+            let mut max_height = tree.height;
+            if (1..height - 1).contains(&row) {
+                max_height = max_height.max(tree_heights[add(row, dr)][col].height);
             }
+            if (1..width - 1).contains(&col) {
+                max_height = max_height.max(tree_heights[row][add(col, dc)].height);
+            }
+            tree_heights[row][col].height = max_height;
         }
     }
 
     // count visible trees
     grid.into_iter()
-        .flat_map(|row| row.into_iter().map(|(_, v)| v).collect::<Vec<bool>>())
-        .filter(|v| *v)
+        .flatten()
+        .filter(|tree| tree.visible)
         .count()
 }
 
-fn part02(input: &str) -> u32 {
+fn part02(input: &str) -> usize {
     let grid: Vec<Vec<u32>> = input
         .lines()
         .map(|line| {
@@ -92,39 +81,23 @@ fn part02(input: &str) -> u32 {
 
     // brute force solution, i'm sure there is probably a memo solution
     let mut max = 0;
-    for row in 0..grid.len() {
-        for col in 0..grid[row].len() {
-            let mut left = 0;
-            for i in (0..col).rev() {
-                left += 1;
-                if grid[row][col] <= grid[row][i] {
-                    break;
-                }
-            }
-            let mut right = 0;
-            for i in col + 1..grid[0].len() {
-                right += 1;
-                if grid[row][col] <= grid[row][i] {
-                    break;
-                }
-            }
-            let mut top = 0;
-            for i in (0..row).rev() {
-                top += 1;
-                if grid[row][col] <= grid[i][col] {
-                    break;
-                }
-            }
-            let mut bot = 0;
-            for i in row + 1..grid.len() {
-                bot += 1;
-                if grid[row][col] <= grid[i][col] {
-                    break;
-                }
-            }
+    for (row, col) in iproduct!(0..grid.len(), 0..grid[0].len()) {
+        let left = (0..col)
+            .rev()
+            .take_until(|ncol| grid[row][col] <= grid[row][*ncol])
+            .count();
+        let right = (col + 1..grid[0].len())
+            .take_until(|ncol| grid[row][col] <= grid[row][*ncol])
+            .count();
+        let top = (0..row)
+            .rev()
+            .take_until(|nrow| grid[row][col] <= grid[*nrow][col])
+            .count();
+        let bot = (row + 1..grid.len())
+            .take_until(|nrow| grid[row][col] <= grid[*nrow][col])
+            .count();
 
-            max = max.max(left * right * top * bot);
-        }
+        max = max.max(left * right * top * bot);
     }
     max
 }
