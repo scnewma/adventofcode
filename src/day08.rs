@@ -16,90 +16,64 @@ fn part01(input: &str) -> usize {
                 .collect::<Vec<(u32, bool)>>()
         })
         .collect();
-    // build a point map
-    // let mut trees = HashMap::new();
-    // let mut width = 0;
-    // let mut height = 0;
-    // for (row, line) in input.lines().enumerate() {
-    //     for (col, tree) in line.chars().enumerate() {
-    //         trees.insert((row, col), tree.to_digit(10).unwrap());
-    //         width = col;
-    //     }
-    //     height = row;
-    // }
+    let (height, width) = (grid.len(), grid[0].len());
 
     // top-left to bottom-right
-    let deltas: [(i32, i32); 2] = [(-1, 0), (0, -1)];
+    let deltas: [(i32, i32); 4] = [(-1, 0), (0, -1), (1, 0), (0, 1)];
     for (dr, dc) in deltas.into_iter() {
+        // tree heights is used as a memo for what we have seen previously in our grid iteration.
+        // it tracks the greatest seen height in this row / col. if any tree in this row / col is
+        // greater than the current tree's height then it isn't visible from the edge.
         let mut tree_heights = grid.clone();
-        for row in 0..grid.len() {
-            for col in 0..grid[0].len() {
-                let (h, is_visible) = grid[row][col];
-                let is_visible = is_visible
-                    || row == 0
-                    || col == 0
-                    || tree_heights[add(row, dr)][col].0 < h
-                    || tree_heights[row][add(col, dc)].0 < h;
-                grid[row][col].1 = is_visible;
+        let mut process = |row: usize, col: usize| {
+            let (h, is_visible) = grid[row][col];
+            let is_visible = is_visible
+                || row == 0
+                || row == height - 1
+                || col == 0
+                || col == width - 1
+                || tree_heights[add(row, dr)][col].0 < h
+                || tree_heights[row][add(col, dc)].0 < h;
+            grid[row][col].1 = is_visible;
 
-                let maxh = [
-                    Some(h),
-                    if row == 0 {
-                        None
-                    } else {
-                        Some(tree_heights[add(row, dr)][col].0)
-                    },
-                    if col == 0 {
-                        None
-                    } else {
-                        Some(tree_heights[row][add(col, dc)].0)
-                    },
-                ]
-                .into_iter()
-                .flatten()
-                .max()
-                .unwrap();
-                tree_heights[row][col].0 = maxh;
+            let maxh = [
+                Some(h),
+                if row == 0 || row == height - 1 {
+                    None
+                } else {
+                    Some(tree_heights[add(row, dr)][col].0)
+                },
+                if col == 0 || col == width - 1 {
+                    None
+                } else {
+                    Some(tree_heights[row][add(col, dc)].0)
+                },
+            ]
+            .into_iter()
+            .flatten()
+            .max()
+            .unwrap();
+            tree_heights[row][col].0 = maxh;
+        };
+
+        // we need to either iterate top-left to bottom-right or bottom-right to top-left depending
+        // on what we need to memo
+        if dr == 1 || dc == 1 {
+            for row in (0..height).rev() {
+                for col in (0..width).rev() {
+                    process(row, col);
+                }
+            }
+        } else {
+            for row in 0..height {
+                for col in 0..width {
+                    process(row, col);
+                }
             }
         }
     }
 
-    // bottom-right to top-left
-    let deltas: [(i32, i32); 2] = [(1, 0), (0, 1)];
-    for (dr, dc) in deltas.into_iter() {
-        let mut tree_heights = grid.clone();
-        for row in (0..grid.len()).rev() {
-            for col in (0..grid[0].len()).rev() {
-                let (h, is_visible) = grid[row][col];
-                let is_visible = is_visible
-                    || row == grid.len() - 1
-                    || col == grid[0].len() - 1
-                    || tree_heights[add(row, dr)][col].0 < h
-                    || tree_heights[row][add(col, dc)].0 < h;
-                grid[row][col].1 = is_visible;
-
-                let maxh = [
-                    Some(h),
-                    if row == grid.len() - 1 {
-                        None
-                    } else {
-                        Some(tree_heights[add(row, dr)][col].0)
-                    },
-                    if col == grid[0].len() - 1 {
-                        None
-                    } else {
-                        Some(tree_heights[row][add(col, dc)].0)
-                    },
-                ]
-                .into_iter()
-                .flatten()
-                .max()
-                .unwrap();
-                tree_heights[row][col].0 = maxh;
-            }
-        }
-    }
-
+    // count visible trees
     grid.into_iter()
         .flat_map(|row| row.into_iter().map(|(_, v)| v).collect::<Vec<bool>>())
         .filter(|v| *v)
