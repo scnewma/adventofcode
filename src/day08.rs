@@ -80,26 +80,26 @@ fn part02(input: &str) -> usize {
         .collect();
 
     // brute force solution, i'm sure there is probably a memo solution
-    let mut max = 0;
-    for (row, col) in iproduct!(0..grid.len(), 0..grid[0].len()) {
-        let left = (0..col)
-            .rev()
-            .take_until(|ncol| grid[row][col] <= grid[row][*ncol])
-            .count();
-        let right = (col + 1..grid[0].len())
-            .take_until(|ncol| grid[row][col] <= grid[row][*ncol])
-            .count();
-        let top = (0..row)
-            .rev()
-            .take_until(|nrow| grid[row][col] <= grid[*nrow][col])
-            .count();
-        let bot = (row + 1..grid.len())
-            .take_until(|nrow| grid[row][col] <= grid[*nrow][col])
-            .count();
-
-        max = max.max(left * right * top * bot);
-    }
-    max
+    iproduct!(0..grid.len(), 0..grid[0].len())
+        .map(|(row, col)| {
+            let left = (0..col)
+                .rev()
+                .take_until(|ncol| grid[row][col] <= grid[row][*ncol])
+                .count();
+            let right = (col + 1..grid[0].len())
+                .take_until(|ncol| grid[row][col] <= grid[row][*ncol])
+                .count();
+            let top = (0..row)
+                .rev()
+                .take_until(|nrow| grid[row][col] <= grid[*nrow][col])
+                .count();
+            let bot = (row + 1..grid.len())
+                .take_until(|nrow| grid[row][col] <= grid[*nrow][col])
+                .count();
+            left * right * top * bot
+        })
+        .max()
+        .unwrap()
 }
 
 fn add(u: usize, i: i32) -> usize {
