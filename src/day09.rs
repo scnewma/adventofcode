@@ -28,30 +28,22 @@ fn solve(input: &str, n: usize) -> usize {
         .for_each(|(dir, n)| {
             for _ in 0..n {
                 match dir {
-                    "R" => knots[0] = (knots[0].0, knots[0].1 + 1),
-                    "L" => knots[0] = (knots[0].0, knots[0].1 - 1),
-                    "U" => knots[0] = (knots[0].0 + 1, knots[0].1),
-                    "D" => knots[0] = (knots[0].0 - 1, knots[0].1),
-                    _ => panic!("unknown direction {}", dir),
+                    "R" => knots[0].1 += 1,
+                    "L" => knots[0].1 -= 1,
+                    "U" => knots[0].0 += 1,
+                    "D" => knots[0].0 -= 1,
+                    _ => unreachable!(),
                 }
 
                 for i in 1..knots.len() {
-                    let dx = knots[i - 1].1 - knots[i].1;
-                    let dy = knots[i - 1].0 - knots[i].0;
-                    match (dx, dy) {
-                        (0, 2) => knots[i].0 += 1,
-                        (0, -2) => knots[i].0 -= 1,
-                        (2, 0) => knots[i].1 += 1,
-                        (-2, 0) => knots[i].1 -= 1,
-                        (1, 2) | (2, 1) | (2, 2) => knots[i] = (knots[i].0 + 1, knots[i].1 + 1),
-                        (-1, 2) | (-2, 1) | (-2, 2) => knots[i] = (knots[i].0 + 1, knots[i].1 - 1),
-                        (1, -2) | (2, -1) | (2, -2) => knots[i] = (knots[i].0 - 1, knots[i].1 + 1),
-                        (-1, -2) | (-2, -1) | (-2, -2) => {
-                            knots[i] = (knots[i].0 - 1, knots[i].1 - 1)
-                        }
-                        _ => {}
+                    // if head is >2 away from tail in any direction move in that direction
+                    let dx: i32 = knots[i - 1].1 - knots[i].1;
+                    let dy: i32 = knots[i - 1].0 - knots[i].0;
+                    if dx.abs() > 1 || dy.abs() > 1 {
+                        knots[i] = (knots[i].0 + dy.signum(), knots[i].1 + dx.signum());
                     }
 
+                    // we only keep track of the locations of the tail
                     if i == knots.len() - 1 {
                         visited.insert(knots[knots.len() - 1]);
                     }
@@ -59,7 +51,7 @@ fn solve(input: &str, n: usize) -> usize {
             }
         });
 
-    visited.into_iter().count()
+    visited.len()
 }
 
 #[cfg(test)]
