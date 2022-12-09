@@ -10,16 +10,16 @@ pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
 }
 
 fn part01(input: &str) -> usize {
-    solve(input, 2)
+    solve::<2>(input)
 }
 
 fn part02(input: &str) -> usize {
-    solve(input, 10)
+    solve::<10>(input)
 }
 
-fn solve(input: &str, n: usize) -> usize {
+fn solve<const N: usize>(input: &str) -> usize {
     let mut visited = HashSet::new();
-    let mut knots = vec![(0, 0); n];
+    let mut knots = [(0, 0); N];
     visited.insert((0, 0));
     input
         .lines()
