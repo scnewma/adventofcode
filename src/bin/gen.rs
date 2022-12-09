@@ -3,18 +3,18 @@ use std::{fs, path::Path};
 
 const TEMPLATE: &str = r###"use crate::SolveInfo;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
     })
 }
 
-fn part01(input: &str) -> u32 {
+pub fn part01(input: &str) -> u32 {
     0
 }
 
-fn part02(input: &str) -> u32 {
+pub fn part02(input: &str) -> u32 {
     0
 }
 
@@ -58,26 +58,31 @@ struct Cli {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    let fp = Path::new("src").join(format!("day{:02}.rs", cli.day));
+    let day = format!("day{:02}", cli.day);
+    let fp = Path::new("src").join(format!("{}.rs", day));
     if fp.exists() {
-        anyhow::bail!("{} already exists!", fp.to_string_lossy())
+        anyhow::bail!("{} already exists!", fp.to_string_lossy());
     }
+    fs::write(fp, TEMPLATE.replace("::DAY::", &day))?;
 
-    fs::write(fp, TEMPLATE.replace("::DAY::", &cli.day.to_string()))?;
-    fs::File::create(Path::new("inputs").join(format!("{}.sample.txt", cli.day)))?;
-    fs::File::create(Path::new("inputs").join(format!("{}.input.txt", cli.day)))?;
+    fs::File::create(Path::new("inputs").join(format!("{}.sample.txt", day)))?;
+    fs::File::create(Path::new("inputs").join(format!("{}.input.txt", day)))?;
 
     let fp_main = Path::new("src").join("main.rs");
     let contents = fs::read_to_string(&fp_main)?;
     let contents = contents.replace(
-        "// GENERATE MODULE HEADER",
-        &format!("mod day{:02};\n// GENERATE MODULE HEADER", cli.day),
-    );
-    let contents = contents.replace(
         "// GENERATE DAY FUNCTION",
-        &format!("day{:02}::run,\n        // GENERATE DAY FUNCTION", cli.day),
+        &format!("{}::run,\n        // GENERATE DAY FUNCTION", day),
     );
     fs::write(&fp_main, contents)?;
+
+    let fp_lib = Path::new("src").join("lib.rs");
+    let contents = fs::read_to_string(&fp_lib)?;
+    let contents = contents.replace(
+        "// GENERATE MOD HEADER",
+        &format!("pub mod {};\n// GENERATE MOD HEADER", day),
+    );
+    fs::write(&fp_lib, contents)?;
 
     Ok(())
 }

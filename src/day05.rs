@@ -1,18 +1,18 @@
 use anyhow::Context;
 use std::str::FromStr;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input),
         part02: part02(input),
     })
 }
 
-fn part01(input: &str) -> String {
+pub fn part01(input: &str) -> String {
     solve(input, Model::CM9000)
 }
 
-fn part02(input: &str) -> String {
+pub fn part02(input: &str) -> String {
     solve(input, Model::CM9001)
 }
 
@@ -111,8 +111,8 @@ impl FromStr for Move {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/5.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/5.input.txt");
+    const SAMPLE: &'static str = include_str!("../inputs/day05.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/day05.input.txt");
 
     #[test]
     fn test_part_one_sample() {

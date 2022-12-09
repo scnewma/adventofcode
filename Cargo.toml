@@ -13,6 +13,13 @@ path = "src/main.rs"
 name = "gen"
 path = "src/bin/gen.rs"
 
+[[bench]]
+name = "bench"
+harness = false
+
+[dev-dependencies]
+criterion = "0.4"
+
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"] }

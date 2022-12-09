@@ -2,14 +2,14 @@ use crate::SolveInfo;
 use itertools::{iproduct, Either};
 use take_until::TakeUntilExt;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
     })
 }
 
-fn part01(input: &str) -> usize {
+pub fn part01(input: &str) -> usize {
     #[derive(Clone)]
     struct Tree {
         height: u32,
@@ -69,7 +69,7 @@ fn part01(input: &str) -> usize {
         .count()
 }
 
-fn part02(input: &str) -> usize {
+pub fn part02(input: &str) -> usize {
     let grid: Vec<Vec<u32>> = input
         .lines()
         .map(|line| {
@@ -114,8 +114,8 @@ fn add(u: usize, i: i32) -> usize {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/8.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/8.input.txt");
+    const SAMPLE: &'static str = include_str!("../inputs/day08.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/day08.input.txt");
 
     #[test]
     fn test_part_one_sample() {

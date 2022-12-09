@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
@@ -52,8 +52,8 @@ fn calc_priority(ch: char) -> u32 {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/3.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/3.input.txt");
+    const SAMPLE: &'static str = include_str!("../inputs/day03.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/day03.input.txt");
 
     #[test]
     fn test_part_one_sample() {

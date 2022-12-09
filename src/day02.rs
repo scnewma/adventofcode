@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
     })
 }
 
-fn part01(input: &str) -> i32 {
+pub fn part01(input: &str) -> i32 {
     input
         .lines()
         .map(|line| line.split_once(' ').unwrap())
@@ -26,7 +26,7 @@ fn part01(input: &str) -> i32 {
         .sum()
 }
 
-fn part02(input: &str) -> i32 {
+pub fn part02(input: &str) -> i32 {
     input
         .lines()
         .map(|line| line.split_once(' ').unwrap())
@@ -118,8 +118,8 @@ impl FromStr for Move {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/2.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/2.input.txt");
+    const SAMPLE: &'static str = include_str!("../inputs/day02.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/day02.input.txt");
 
     #[test]
     fn test_part_one_sample() {

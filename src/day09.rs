@@ -2,18 +2,18 @@ use std::collections::HashSet;
 
 use crate::SolveInfo;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
     })
 }
 
-fn part01(input: &str) -> usize {
+pub fn part01(input: &str) -> usize {
     solve::<2>(input)
 }
 
-fn part02(input: &str) -> usize {
+pub fn part02(input: &str) -> usize {
     solve::<10>(input)
 }
 
@@ -58,9 +58,8 @@ fn solve<const N: usize>(input: &str) -> usize {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/9.sample.txt");
-    const SAMPLE2: &'static str = include_str!("../inputs/9.sample2.txt");
-    const INPUT: &'static str = include_str!("../inputs/9.input.txt");
+    const SAMPLE: &'static str = include_str!("../inputs/day09.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/day09.input.txt");
 
     #[test]
     fn test_part_one_sample() {
@@ -78,12 +77,6 @@ mod tests {
     fn test_part_two_sample() {
         let ans = part02(SAMPLE);
         assert_eq!(1, ans);
-    }
-
-    #[test]
-    fn test_part_two_sample2() {
-        let ans = part02(SAMPLE2);
-        assert_eq!(36, ans);
     }
 
     #[test]

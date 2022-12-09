@@ -1,17 +1,17 @@
 use crate::SolveInfo;
 
-pub(crate) fn run(input: &str) -> anyhow::Result<SolveInfo> {
+pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
     })
 }
 
-fn part01(input: &str) -> usize {
+pub fn part01(input: &str) -> usize {
     solve(input, 4)
 }
 
-fn part02(input: &str) -> usize {
+pub fn part02(input: &str) -> usize {
     solve(input, 14)
 }
 
@@ -40,8 +40,8 @@ fn solve(input: &str, num_distinct: usize) -> usize {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/6.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/6.input.txt");
+    const SAMPLE: &'static str = include_str!("../inputs/day06.sample.txt");
+    const INPUT: &'static str = include_str!("../inputs/day06.input.txt");
 
     #[test]
     fn test_part_one_sample() {

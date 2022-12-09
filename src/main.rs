@@ -1,21 +1,7 @@
 use anyhow::Context;
 use clap::Parser;
 
-mod day01;
-mod day02;
-mod day03;
-mod day04;
-mod day05;
-mod day06;
-mod day07;
-mod day08;
-mod day09;
-// GENERATE MODULE HEADER
-
-struct SolveInfo {
-    part01: String,
-    part02: String,
-}
+use adventofcode22::*;
 
 #[derive(Parser)]
 struct Cli {
@@ -64,9 +50,9 @@ fn main() -> anyhow::Result<()> {
 
 fn day_input(day: usize, sample: bool) -> anyhow::Result<String> {
     let fname = if sample {
-        format!("inputs/{}.sample.txt", day)
+        format!("inputs/day{:02}.sample.txt", day)
     } else {
-        format!("inputs/{}.input.txt", day)
+        format!("inputs/day{:02}.input.txt", day)
     };
     std::fs::read_to_string(&fname).with_context(|| format!("Reading file {}", fname))
 }
