@@ -23,6 +23,7 @@ fn main() -> anyhow::Result<()> {
         day07::run,
         day08::run,
         day09::run,
+        day10::run,
         // GENERATE DAY FUNCTION
     ];
 
