@@ -13,12 +13,9 @@ pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
 
 pub fn part01(input: &str) -> i32 {
     let mut sum = 0;
-    let mut last_cycle: i32 = -20;
     let mut crt = Crt::new(|cycle, x| {
-        if cycle as i32 == last_cycle + 40 {
-            let signal = cycle as i32 * x;
-            sum += signal;
-            last_cycle = cycle as i32;
+        if cycle % 40 == 20 {
+            sum += cycle as i32 * x;
         }
     });
     input
@@ -53,7 +50,7 @@ where
 {
     cycle: usize,
     x: i32,
-    hook: F,
+    probe: F,
     screen: [u8; W * H],
 }
 
@@ -61,11 +58,11 @@ impl<F> Crt<F>
 where
     F: FnMut(usize, i32),
 {
-    fn new(hook: F) -> Self {
+    fn new(probe: F) -> Self {
         Self {
             cycle: 0,
             x: 1,
-            hook,
+            probe,
             screen: [0; W * H],
         }
     }
@@ -90,7 +87,7 @@ where
             self.screen[self.cycle] = 1;
         }
         self.cycle += 1;
-        (self.hook)(self.cycle, self.x);
+        (self.probe)(self.cycle, self.x);
     }
 }
 
