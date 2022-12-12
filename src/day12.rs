@@ -15,27 +15,25 @@ pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
 
 pub fn part01(input: &str) -> anyhow::Result<u32> {
     let map: ElevationMap = input.parse()?;
-    map.shortest_path(map.start, map.end)
+    let mut queue = VecDeque::new();
+    queue.push_back((map.start, 0));
+    map.shortest_path(queue, map.end)
         .context("no shortest path!")
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u32> {
     let map: ElevationMap = input.parse()?;
-    let starts: Vec<(i32, i32)> = map
+    let queue: VecDeque<((i32, i32), u32)> = map
         .grid
         .iter()
         .filter(|(_, el)| **el == 'a')
         .map(|(point, _)| *point)
+        .map(|p| (p, 0))
         .collect();
 
-    let mut shortest = u32::max_value();
-    for start in starts {
-        if let Some(path) = map.shortest_path(start, map.end) {
-            shortest = shortest.min(path);
-        }
-    }
-
-    Ok(shortest)
+    Ok(map
+        .shortest_path(queue, map.end)
+        .context("no shortest path!")?)
 }
 
 struct ElevationMap {
@@ -49,10 +47,11 @@ struct ElevationMap {
 impl ElevationMap {
     const DELTAS: [(i32, i32); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
 
-    fn shortest_path(&self, start: (i32, i32), end: (i32, i32)) -> Option<u32> {
-        let mut queue = VecDeque::new();
-        queue.push_back((start, 0));
-
+    fn shortest_path(
+        &self,
+        mut queue: VecDeque<((i32, i32), u32)>,
+        end: (i32, i32),
+    ) -> Option<u32> {
         let mut visited: HashSet<(i32, i32)> = HashSet::new();
 
         while let Some((point, steps)) = queue.pop_front() {
