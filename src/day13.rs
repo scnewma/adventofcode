@@ -62,26 +62,19 @@ impl Element {
 impl Ord for Element {
     fn cmp(&self, other: &Self) -> Ordering {
         use Element::*;
+
         match (self, other) {
             (Number(l), Number(r)) => l.cmp(r),
             (Number(l), r) => Element::singleton(Number(*l)).cmp(r),
             (l, Number(r)) => l.cmp(&Element::singleton(Number(*r))),
             (List(l), List(r)) => {
-                for i in 0..l.len().max(r.len()) {
-                    if i >= l.len() && i >= r.len() {
-                        return Ordering::Equal;
-                    } else if i >= l.len() {
-                        return Ordering::Less;
-                    } else if i >= r.len() {
-                        return Ordering::Greater;
-                    } else {
-                        let ord = l[i].cmp(&r[i]);
-                        if ord == Ordering::Less || ord == Ordering::Greater {
-                            return ord;
-                        }
+                for i in 0..l.len().min(r.len()) {
+                    match l[i].cmp(&r[i]) {
+                        Ordering::Equal => (),
+                        non_eq => return non_eq,
                     }
                 }
-                Ordering::Equal
+                l.len().cmp(&r.len())
             }
         }
     }
