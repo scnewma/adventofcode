@@ -1,6 +1,9 @@
 use std::{cmp::Ordering, str::FromStr};
 
 use itertools::Itertools;
+use nom::{
+    branch::alt, bytes::complete::tag, multi::separated_list0, sequence::delimited, Finish, IResult,
+};
 
 use crate::SolveInfo;
 
@@ -102,45 +105,26 @@ impl FromStr for Element {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut stk: Vec<Vec<Element>> = Vec::new();
-        let mut root: Option<Element> = None;
-        let mut num_pending: Option<u32> = None;
-        for ch in s.chars() {
-            match ch {
-                '[' => {
-                    stk.push(Vec::new());
-                }
-                ']' => {
-                    if let Some(num) = num_pending {
-                        let last_idx = stk.len() - 1;
-                        stk[last_idx].push(Element::Number(num));
-                        num_pending = None
-                    }
-
-                    let els = stk.pop().unwrap();
-                    if stk.is_empty() {
-                        root.replace(Element::List(els));
-                    } else {
-                        let last_idx = stk.len() - 1;
-                        stk[last_idx].push(Element::List(els));
-                    }
-                }
-                ',' => {
-                    if let Some(num) = num_pending {
-                        let last_idx = stk.len() - 1;
-                        stk[last_idx].push(Element::Number(num));
-                        num_pending = None
-                    }
-                }
-                '0'..='9' => {
-                    let digit = ch.to_digit(10).unwrap();
-                    num_pending = Some(num_pending.map_or(digit, |v| v * 10 + digit));
-                }
-                _ => unreachable!(),
-            }
+        match parse_element(s).finish() {
+            Ok((_, root)) => Ok(root),
+            Err(err) => anyhow::bail!(err.input.to_string()),
         }
-        Ok(root.unwrap())
     }
+}
+
+fn parse_element(input: &str) -> IResult<&str, Element> {
+    alt((parse_list_element, parse_number_element))(input)
+}
+
+fn parse_list_element(input: &str) -> IResult<&str, Element> {
+    let (rest, elements) =
+        delimited(tag("["), separated_list0(tag(","), parse_element), tag("]"))(input)?;
+    Ok((rest, Element::List(elements)))
+}
+
+fn parse_number_element(input: &str) -> IResult<&str, Element> {
+    let (rest, n) = nom::character::complete::u32(input)?;
+    Ok((rest, Element::Number(n)))
 }
 
 #[cfg(test)]

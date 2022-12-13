@@ -26,3 +26,4 @@ clap = { version = "4.0.29", features = ["derive"] }
 itertools = "0.10.5"
 take-until = "0.1.0"
 num = "0.4"
+nom = "7.1.1"
