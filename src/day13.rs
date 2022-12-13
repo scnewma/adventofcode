@@ -16,34 +16,28 @@ pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
 
 pub fn part01(input: &str) -> usize {
     input
-        .split("\n\n")
-        .map(|s| {
-            s.lines()
-                .map(|l| l.parse::<Element>().unwrap())
-                .collect_tuple()
-                .unwrap()
-        })
+        .lines()
+        .filter(|l| !l.is_empty())
+        .flat_map(Element::from_str)
+        .tuples()
         .enumerate()
-        .filter(|(_, (l, r))| l.cmp(r) == Ordering::Less)
-        .map(|(i, _)| i + 1)
+        .filter(|(_idx, (l, r))| l.cmp(r) == Ordering::Less)
+        .map(|(idx, _)| idx + 1)
         .sum()
 }
 
 pub fn part02(input: &str) -> usize {
-    let mut packets: Vec<Element> = input
+    let divider_packets = ["[[2]]".parse().unwrap(), "[[6]]".parse().unwrap()];
+
+    input
         .lines()
         .filter(|l| !l.is_empty())
         .flat_map(Element::from_str)
-        .collect();
-    let divider_packets: (Element, Element) = ("[[2]]".parse().unwrap(), "[[6]]".parse().unwrap());
-    packets.push(divider_packets.0.clone());
-    packets.push(divider_packets.1.clone());
-    packets.sort();
-    packets
-        .into_iter()
+        .chain(divider_packets.iter().cloned())
+        .sorted()
         .enumerate()
-        .filter(|(_, p)| p == &divider_packets.0 || p == &divider_packets.1)
-        .map(|(i, _)| i + 1)
+        .filter(|(_idx, pkt)| pkt == &divider_packets[0] || pkt == &divider_packets[1])
+        .map(|(idx, _pkt)| idx + 1)
         .product()
 }
 
@@ -68,7 +62,8 @@ impl Ord for Element {
             (Number(l), r) => Element::singleton(Number(*l)).cmp(r),
             (l, Number(r)) => l.cmp(&Element::singleton(Number(*r))),
             (List(l), List(r)) => {
-                for i in 0..l.len().min(r.len()) {
+                let min = l.len().min(r.len());
+                for i in 0..min {
                     match l[i].cmp(&r[i]) {
                         Ordering::Equal => (),
                         non_eq => return non_eq,
