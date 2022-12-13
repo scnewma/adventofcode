@@ -31,9 +31,8 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         .map(|p| (p, 0))
         .collect();
 
-    Ok(map
-        .shortest_path(queue, map.end)
-        .context("no shortest path!")?)
+    map.shortest_path(queue, map.end)
+        .context("no shortest path!")
 }
 
 struct ElevationMap {

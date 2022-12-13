@@ -59,7 +59,7 @@ impl Element {
 impl Ord for Element {
     fn cmp(&self, other: &Self) -> Ordering {
         use Element::*;
-        let res = match (self, other) {
+        match (self, other) {
             (Number(l), Number(r)) => l.cmp(r),
             (Number(l), r) => Element::singleton(Number(*l)).cmp(r),
             (l, Number(r)) => l.cmp(&Element::singleton(Number(*r))),
@@ -80,8 +80,7 @@ impl Ord for Element {
                 }
                 Ordering::Equal
             }
-        };
-        res
+        }
     }
 }
 
@@ -119,7 +118,7 @@ impl FromStr for Element {
                     }
 
                     let els = stk.pop().unwrap();
-                    if stk.len() == 0 {
+                    if stk.is_empty() {
                         root.replace(Element::List(els));
                     } else {
                         let last_idx = stk.len() - 1;
