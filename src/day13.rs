@@ -1,5 +1,7 @@
 use std::{cmp::Ordering, str::FromStr};
 
+use itertools::Itertools;
+
 use crate::SolveInfo;
 
 pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
@@ -13,13 +15,10 @@ pub fn part01(input: &str) -> usize {
     input
         .split("\n\n")
         .map(|s| {
-            let mut lines = s.lines();
-            let left = lines.next().unwrap();
-            let right = lines.next().unwrap();
-            (
-                left.parse::<Element>().unwrap(),
-                right.parse::<Element>().unwrap(),
-            )
+            s.lines()
+                .map(|l| l.parse::<Element>().unwrap())
+                .collect_tuple()
+                .unwrap()
         })
         .enumerate()
         .filter(|(_, (l, r))| l.cmp(r) == Ordering::Less)
@@ -51,11 +50,19 @@ enum Element {
     List(Vec<Element>),
 }
 
+impl Element {
+    fn singleton(el: Element) -> Element {
+        Element::List(vec![el])
+    }
+}
+
 impl Ord for Element {
     fn cmp(&self, other: &Self) -> Ordering {
         use Element::*;
         let res = match (self, other) {
             (Number(l), Number(r)) => l.cmp(r),
+            (Number(l), r) => Element::singleton(Number(*l)).cmp(r),
+            (l, Number(r)) => l.cmp(&Element::singleton(Number(*r))),
             (List(l), List(r)) => {
                 for i in 0..l.len().max(r.len()) {
                     if i >= l.len() && i >= r.len() {
@@ -73,8 +80,6 @@ impl Ord for Element {
                 }
                 Ordering::Equal
             }
-            (Number(l), r) => Element::List(vec![Number(*l)]).cmp(r),
-            (l, Number(r)) => l.cmp(&Element::List(vec![Number(*r)])),
         };
         res
     }
@@ -100,7 +105,7 @@ impl FromStr for Element {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut stk: Vec<Vec<Element>> = Vec::new();
         let mut root: Option<Element> = None;
-        let mut num_pending: Option<String> = None;
+        let mut num_pending: Option<u32> = None;
         for ch in s.chars() {
             match ch {
                 '[' => {
@@ -109,7 +114,7 @@ impl FromStr for Element {
                 ']' => {
                     if let Some(num) = num_pending {
                         let last_idx = stk.len() - 1;
-                        stk[last_idx].push(Element::Number(num.parse().unwrap()));
+                        stk[last_idx].push(Element::Number(num));
                         num_pending = None
                     }
 
@@ -124,19 +129,13 @@ impl FromStr for Element {
                 ',' => {
                     if let Some(num) = num_pending {
                         let last_idx = stk.len() - 1;
-                        stk[last_idx].push(Element::Number(num.parse().unwrap()));
+                        stk[last_idx].push(Element::Number(num));
                         num_pending = None
                     }
                 }
                 '0'..='9' => {
-                    if num_pending == None {
-                        num_pending = Some(String::from(ch));
-                    } else {
-                        num_pending = num_pending.map(|mut s| {
-                            s.push(ch);
-                            s
-                        });
-                    }
+                    let digit = ch.to_digit(10).unwrap();
+                    num_pending = Some(num_pending.map_or(digit, |v| v * 10 + digit));
                 }
                 _ => unreachable!(),
             }
