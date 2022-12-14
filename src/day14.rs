@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use anyhow::Context;
 
@@ -12,14 +12,15 @@ pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
 }
 
 const DELTAS: [(i32, i32); 3] = [(0, 1), (-1, 1), (1, 1)];
+const SOURCE: Point = Point { x: 500, y: 0 };
 
 pub fn part01(input: &str) -> anyhow::Result<u32> {
-    let mut map = parse_input(input)?;
+    let mut obstructions = parse_input(input)?;
 
-    let max_y = map.iter().map(|(p, _obs)| p.y).max().context("no max_y")?;
+    let max_y = obstructions.iter().map(|p| p.y).max().context("no max_y")?;
 
     let mut num_sand = 0;
-    let mut sand = Point { x: 500, y: 0 };
+    let mut sand = SOURCE;
     loop {
         let before = sand;
         for (dx, dy) in DELTAS {
@@ -27,15 +28,15 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
                 x: add(sand.x, dx),
                 y: add(sand.y, dy),
             };
-            if map.get(&next).is_none() {
+            if !obstructions.contains(&next) {
                 sand = next;
                 break;
             }
         }
         if sand == before {
-            map.insert(sand, Obstruction::Sand);
+            obstructions.insert(sand);
             num_sand += 1;
-            sand = Point { x: 500, y: 0 };
+            sand = SOURCE;
         }
         if sand.y > max_y {
             break Ok(num_sand);
@@ -44,17 +45,14 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u32> {
-    let map = parse_input(input)?;
+    let mut obstructions = parse_input(input)?;
 
-    let max_y = map.iter().map(|(p, _obs)| p.y).max().context("no max_y")?;
-
-    let mut map = ObstructionMap {
-        grid: map,
-        floor: max_y + 2,
-    };
+    let max_y = obstructions.iter().map(|p| p.y).max().context("no max_y")?;
+    let floor = max_y + 2;
 
     let mut num_sand = 0;
-    let mut sand = Point { x: 500, y: 0 };
+    let mut sand = SOURCE;
+    let mut stk = Vec::new();
     loop {
         let before = sand;
         for (dx, dy) in DELTAS {
@@ -62,53 +60,31 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                 x: add(sand.x, dx),
                 y: add(sand.y, dy),
             };
-            if map.get(&next).is_none() {
+            if next.y != floor && !obstructions.contains(&next) {
                 sand = next;
+                stk.push(sand);
                 break;
             }
         }
-        if sand == (Point { x: 500, y: 0 }) {
+        if sand == SOURCE {
             break Ok(num_sand + 1);
         }
         if sand == before {
-            map.insert(sand, Obstruction::Sand);
+            obstructions.insert(sand);
             num_sand += 1;
-            sand = Point { x: 500, y: 0 };
+            stk.pop();
+            sand = stk.pop().unwrap_or(SOURCE);
         }
     }
 }
 
+#[inline]
 fn add(u: usize, i: i32) -> usize {
     if i.is_negative() {
         u - i.unsigned_abs() as usize
     } else {
         u + i as usize
     }
-}
-
-struct ObstructionMap {
-    grid: HashMap<Point, Obstruction>,
-    floor: usize,
-}
-
-impl ObstructionMap {
-    fn get(&self, point: &Point) -> Option<Obstruction> {
-        if point.y == self.floor {
-            Some(Obstruction::Rock)
-        } else {
-            self.grid.get(point).cloned()
-        }
-    }
-
-    fn insert(&mut self, point: Point, obs: Obstruction) {
-        self.grid.insert(point, obs);
-    }
-}
-
-#[derive(Debug, Clone)]
-enum Obstruction {
-    Sand,
-    Rock,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -120,8 +96,8 @@ struct Point {
     y: usize,
 }
 
-fn parse_input(input: &str) -> anyhow::Result<HashMap<Point, Obstruction>> {
-    let mut map: HashMap<Point, Obstruction> = HashMap::new();
+fn parse_input(input: &str) -> anyhow::Result<HashSet<Point>> {
+    let mut map = HashSet::new();
     for line in input.lines() {
         let mut prev: Option<Point> = None;
         for point in line.split(" -> ") {
@@ -135,13 +111,13 @@ fn parse_input(input: &str) -> anyhow::Result<HashMap<Point, Obstruction>> {
                     // vertical
                     let (min, max) = (prev.y.min(point.y), prev.y.max(point.y));
                     for i in min..=max {
-                        map.insert(Point { x: prev.x, y: i }, Obstruction::Rock);
+                        map.insert(Point { x: prev.x, y: i });
                     }
                 } else {
                     // horizontal
                     let (min, max) = (prev.x.min(point.x), prev.x.max(point.x));
                     for i in min..=max {
-                        map.insert(Point { x: i, y: prev.y }, Obstruction::Rock);
+                        map.insert(Point { x: i, y: prev.y });
                     }
                 }
             }
