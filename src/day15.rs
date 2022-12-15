@@ -88,11 +88,7 @@ fn part02_inner<const MAX: u32>(input: &str) -> u64 {
     panic!("distress beacon not found!")
 }
 
-fn insert_interval(
-    mut intervals: Vec<(i32, i32)>,
-    mut new_interval: (i32, i32),
-) -> Vec<(i32, i32)> {
-    intervals.sort();
+fn insert_interval(intervals: Vec<(i32, i32)>, mut new_interval: (i32, i32)) -> Vec<(i32, i32)> {
     let mut merged = Vec::new();
     let mut added = false;
     for interval in intervals.into_iter() {
