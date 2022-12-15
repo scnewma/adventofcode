@@ -1,3 +1,4 @@
+use arrayvec::ArrayVec;
 use nom::{
     bytes::complete::tag,
     character::complete,
@@ -12,35 +13,32 @@ use crate::SolveInfo;
 pub fn run(input: &str, is_sample: bool) -> anyhow::Result<SolveInfo> {
     if is_sample {
         Ok(SolveInfo {
-            part01: part01_inner::<10>(input).to_string(),
-            part02: part02_inner::<20>(input).to_string(),
+            part01: part01_inner::<14, 10>(input).to_string(),
+            part02: part02_inner::<14, 20>(input).to_string(),
         })
     } else {
         Ok(SolveInfo {
-            part01: part01_inner::<2000000>(input).to_string(),
-            part02: part02_inner::<4000000>(input).to_string(),
+            part01: part01_inner::<28, 2000000>(input).to_string(),
+            part02: part02_inner::<28, 4000000>(input).to_string(),
         })
     }
 }
 
 pub fn part01(input: &str) -> i32 {
-    part01_inner::<200000>(input)
+    part01_inner::<28, 200000>(input)
 }
 
 pub fn part02(input: &str) -> u64 {
-    part02_inner::<4000000>(input)
+    part02_inner::<28, 4000000>(input)
 }
 
-fn part01_inner<const ROW: i32>(input: &str) -> i32 {
-    // change to 2000000 for input
-    let sensors: Vec<Sensor> = input.lines().map(|l| parse_sensor(l).unwrap().1).collect();
-    let mut intervals = Vec::new();
-    let mut beacon_locations = Vec::new();
-    for sensor in sensors.iter() {
-        if sensor.beacon.y == ROW {
-            beacon_locations.push(sensor.beacon.x);
-        }
+const MAX_INTERVALS: usize = 101;
 
+fn part01_inner<const SENSORS: usize, const ROW: i32>(input: &str) -> i32 {
+    let sensors: ArrayVec<Sensor, SENSORS> =
+        input.lines().map(|l| parse_sensor(l).unwrap().1).collect();
+    let mut intervals: ArrayVec<_, MAX_INTERVALS> = ArrayVec::new();
+    for sensor in sensors.iter() {
         let dist = sensor.pos.distance(&Point {
             x: sensor.pos.x,
             y: ROW,
@@ -58,15 +56,12 @@ fn part01_inner<const ROW: i32>(input: &str) -> i32 {
     count - 1
 }
 
-fn part02_inner<const MAX: u32>(input: &str) -> u64 {
-    let sensors: Vec<Sensor> = input.lines().map(|l| parse_sensor(l).unwrap().1).collect();
+fn part02_inner<const SENSORS: usize, const MAX: u32>(input: &str) -> u64 {
+    let sensors: ArrayVec<Sensor, SENSORS> =
+        input.lines().map(|l| parse_sensor(l).unwrap().1).collect();
     for row in 0..=MAX {
-        let mut intervals = Vec::new();
+        let mut intervals: ArrayVec<_, MAX_INTERVALS> = ArrayVec::new();
         for sensor in sensors.iter() {
-            if sensor.beacon.y == row as i32 {
-                intervals = insert_interval(intervals, (sensor.beacon.x, sensor.beacon.x));
-            }
-
             let dist = sensor.pos.distance(&Point {
                 x: sensor.pos.x,
                 y: row as i32,
@@ -88,23 +83,25 @@ fn part02_inner<const MAX: u32>(input: &str) -> u64 {
     panic!("distress beacon not found!")
 }
 
-fn insert_interval(intervals: Vec<(i32, i32)>, mut new_interval: (i32, i32)) -> Vec<(i32, i32)> {
-    let mut merged = Vec::new();
+fn insert_interval<const CAP: usize>(
+    intervals: ArrayVec<(i32, i32), CAP>,
+    mut new_interval: (i32, i32),
+) -> ArrayVec<(i32, i32), CAP> {
+    let mut merged = ArrayVec::new();
     let mut added = false;
-    for interval in intervals.into_iter() {
-        if added {
-            merged.push(interval);
-        }
-
+    let mut idx = 0;
+    for interval in intervals.iter() {
+        idx += 1;
         // non-overlapping, starts after this interval
         if interval.1 < new_interval.0 {
-            merged.push(interval);
+            merged.push(*interval);
 
         // non-overlapping, ends before this starts, add both
         } else if interval.0 > new_interval.1 {
             merged.push(new_interval);
-            merged.push(interval);
+            merged.push(*interval);
             added = true;
+            break;
 
         // overlapping
         } else {
@@ -114,6 +111,10 @@ fn insert_interval(intervals: Vec<(i32, i32)>, mut new_interval: (i32, i32)) -> 
     }
     if !added {
         merged.push(new_interval);
+    } else {
+        for i in &intervals[idx..] {
+            merged.push(*i);
+        }
     }
     merged
 }
@@ -121,7 +122,6 @@ fn insert_interval(intervals: Vec<(i32, i32)>, mut new_interval: (i32, i32)) -> 
 #[derive(Debug, Clone)]
 struct Sensor {
     pos: Point,
-    beacon: Point,
     beacon_dist: u32,
 }
 
@@ -133,6 +133,7 @@ struct Point {
 
 impl Point {
     // manhattan distance
+    #[inline]
     fn distance(&self, o: &Point) -> u32 {
         self.x.abs_diff(o.x) + self.y.abs_diff(o.y)
     }
@@ -142,14 +143,7 @@ fn parse_sensor(input: &str) -> IResult<&str, Sensor> {
     let (input, pos) = preceded(tag("Sensor at "), parse_point)(input)?;
     let (input, beacon) = preceded(tag(": closest beacon is at "), parse_point)(input)?;
     let beacon_dist = pos.distance(&beacon);
-    Ok((
-        input,
-        Sensor {
-            pos,
-            beacon,
-            beacon_dist,
-        },
-    ))
+    Ok((input, Sensor { pos, beacon_dist }))
 }
 
 fn parse_point(input: &str) -> IResult<&str, Point> {
@@ -170,25 +164,25 @@ mod tests {
 
     #[test]
     fn test_part_one_sample() {
-        let ans = part01_inner::<10>(SAMPLE);
+        let ans = part01_inner::<14, 10>(SAMPLE);
         assert_eq!(26, ans);
     }
 
     #[test]
     fn test_part_one() {
-        let ans = part01_inner::<2000000>(INPUT);
+        let ans = part01_inner::<28, 2000000>(INPUT);
         assert_eq!(5142231, ans);
     }
 
     #[test]
     fn test_part_two_sample() {
-        let ans = part02_inner::<20>(SAMPLE);
+        let ans = part02_inner::<14, 20>(SAMPLE);
         assert_eq!(56000011, ans);
     }
 
     #[test]
     fn test_part_two() {
-        let ans = part02_inner::<4000000>(INPUT);
+        let ans = part02_inner::<28, 4000000>(INPUT);
         assert_eq!(10884459367718, ans);
     }
 }
