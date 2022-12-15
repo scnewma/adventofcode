@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),

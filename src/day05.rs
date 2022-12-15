@@ -1,7 +1,7 @@
 use anyhow::Context;
 use std::str::FromStr;
 
-pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
+pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input),
         part02: part02(input),

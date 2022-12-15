@@ -28,6 +28,7 @@ fn main() -> anyhow::Result<()> {
         day12::run,
         day13::run,
         day14::run,
+        day15::run,
         // GENERATE DAY FUNCTION
     ];
 
@@ -38,13 +39,13 @@ fn main() -> anyhow::Result<()> {
 
         let input = day_input(day, cli.sample)?;
         let f = days[day - 1];
-        let solve = f(&input)?;
+        let solve = f(&input, cli.sample)?;
         print_solve(day, &solve);
     } else {
         for (day, f) in days.iter().enumerate() {
             let day = day + 1;
             let input = day_input(day, cli.sample)?;
-            let solve = f(&input)?;
+            let solve = f(&input, cli.sample)?;
             print_solve(day, &solve);
             println!();
         }

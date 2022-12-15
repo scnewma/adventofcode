@@ -5,7 +5,7 @@ use std::{cell::RefCell, cmp::Reverse, collections::VecDeque, str::FromStr};
 
 use crate::SolveInfo;
 
-pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
+pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input)?.to_string(),
         part02: part02(input)?.to_string(),
@@ -87,7 +87,6 @@ impl FromStr for Monkey {
         for line in s.lines().skip(1) {
             let (mut desc, data) = line.split_once(": ").context("malformed")?;
             desc = desc.trim_start();
-            dbg!(desc);
             match desc.trim_start() {
                 "Starting items" => {
                     items = Some(process_results(
@@ -99,7 +98,6 @@ impl FromStr for Monkey {
                     let mut words = data.split_whitespace().skip(3);
                     let operator = words.next().context("no operator")?;
                     let n = words.next().context("no rhs on expr")?;
-                    dbg!(operator, n);
                     op = Some(match (operator, n) {
                         ("*", "old") => Op::Square,
                         ("*", n) => Op::Mult(n.parse()?),

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::SolveInfo;
 
-pub fn run(input: &str) -> anyhow::Result<SolveInfo> {
+pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input).to_string(),
         part02: part02(input).to_string(),
