@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+// use std::collections::HashSet;
 
 use anyhow::Context;
 
@@ -15,9 +15,10 @@ const DELTAS: [(i32, i32); 3] = [(0, 1), (-1, 1), (1, 1)];
 const SOURCE: Point = Point { x: 500, y: 0 };
 
 pub fn part01(input: &str) -> anyhow::Result<u32> {
-    let mut obstructions = parse_input(input)?;
+    let (mut obstructions, _) = parse_input(input)?;
 
-    let max_y = obstructions.iter().map(|p| p.y).max().context("no max_y")?;
+    // let max_y = obstructions.iter().map(|p| p.y).max().context("no max_y")?;
+    let max_y = 157;
 
     let mut num_sand = 0;
     let mut sand = SOURCE;
@@ -28,13 +29,13 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
                 x: add(sand.x, dx),
                 y: add(sand.y, dy),
             };
-            if !obstructions.contains(&next) {
+            if !obstructions[next.y][next.x] {
                 sand = next;
                 break;
             }
         }
         if sand == before {
-            obstructions.insert(sand);
+            obstructions[sand.y][sand.x] = true;
             num_sand += 1;
             sand = SOURCE;
         }
@@ -45,9 +46,7 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u32> {
-    let mut obstructions = parse_input(input)?;
-
-    let max_y = obstructions.iter().map(|p| p.y).max().context("no max_y")?;
+    let (mut obstructions, max_y) = parse_input(input)?;
     let floor = max_y + 2;
 
     let mut num_sand = 0;
@@ -60,7 +59,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                 x: add(sand.x, dx),
                 y: add(sand.y, dy),
             };
-            if next.y != floor && !obstructions.contains(&next) {
+            if next.y < floor && !obstructions[next.y][next.x] {
                 sand = next;
                 stk.push(sand);
                 break;
@@ -70,7 +69,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
             break Ok(num_sand + 1);
         }
         if sand == before {
-            obstructions.insert(sand);
+            obstructions[sand.y][sand.x] = true;
             num_sand += 1;
             stk.pop();
             sand = stk.pop().unwrap_or(SOURCE);
@@ -96,8 +95,10 @@ struct Point {
     y: usize,
 }
 
-fn parse_input(input: &str) -> anyhow::Result<HashSet<Point>> {
-    let mut map = HashSet::new();
+fn parse_input(input: &str) -> anyhow::Result<([[bool; 1000]; 200], usize)> {
+    // let mut obstructions = HashSet::new();
+    let mut obstructions = [[false; 1000]; 200];
+    let mut max_y = 0;
     for line in input.lines() {
         let mut prev: Option<Point> = None;
         for point in line.split(" -> ") {
@@ -106,25 +107,26 @@ fn parse_input(input: &str) -> anyhow::Result<HashSet<Point>> {
                 x: left.parse()?,
                 y: right.parse()?,
             };
+            max_y = max_y.max(point.y);
             if let Some(prev) = prev {
                 if prev.x == point.x {
                     // vertical
                     let (min, max) = (prev.y.min(point.y), prev.y.max(point.y));
                     for i in min..=max {
-                        map.insert(Point { x: prev.x, y: i });
+                        obstructions[i][prev.x] = true;
                     }
                 } else {
                     // horizontal
                     let (min, max) = (prev.x.min(point.x), prev.x.max(point.x));
                     for i in min..=max {
-                        map.insert(Point { x: i, y: prev.y });
+                        obstructions[prev.y][i] = true;
                     }
                 }
             }
             prev = Some(point);
         }
     }
-    Ok(map)
+    Ok((obstructions, max_y))
 }
 
 #[cfg(test)]
