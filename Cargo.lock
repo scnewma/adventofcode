@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrayvec",
+ "bittle",
  "clap 4.0.29",
  "criterion",
  "itertools",
@@ -56,6 +57,12 @@ name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
+name = "bittle"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1b31d631988ae144198083b6b245215f9cd81cfeaf3efc1b99ecf6948b7db5a"
 
 [[package]]
 name = "bumpalo"
