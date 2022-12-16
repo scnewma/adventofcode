@@ -1,3 +1,4 @@
+use arrayvec::ArrayVec;
 use bittle::{Bits, BitsMut};
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -13,11 +14,18 @@ use nom::{
 
 use crate::SolveInfo;
 
-pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
-    Ok(SolveInfo {
-        part01: part01(input)?.to_string(),
-        part02: part02(input)?.to_string(),
-    })
+pub fn run(input: &str, is_sample: bool) -> anyhow::Result<SolveInfo> {
+    if is_sample {
+        Ok(SolveInfo {
+            part01: part01(input)?.to_string(),
+            part02: part02_inner::<10>(input)?.to_string(),
+        })
+    } else {
+        Ok(SolveInfo {
+            part01: part01(input)?.to_string(),
+            part02: part02_inner::<55>(input)?.to_string(),
+        })
+    }
 }
 
 pub fn part01(input: &str) -> anyhow::Result<u64> {
@@ -53,10 +61,17 @@ pub fn part01(input: &str) -> anyhow::Result<u64> {
     ))
 }
 
+const MAX_NEIGHBORS: usize = 5;
+
 pub fn part02(input: &str) -> anyhow::Result<u64> {
+    part02_inner::<55>(input)
+}
+
+fn part02_inner<const VALVES: usize>(input: &str) -> anyhow::Result<u64> {
     let lines: Vec<_> = input.lines().map(|l| parse_valve(l).unwrap().1).collect();
-    let mut flow_rates = HashMap::new();
-    let mut edges = HashMap::new();
+    let mut flow_rates = vec![0; lines.len()];
+    let mut edges: ArrayVec<ArrayVec<_, MAX_NEIGHBORS>, VALVES> = ArrayVec::new();
+    (0..lines.len()).for_each(|_| edges.push(ArrayVec::new()));
     let valve_bit_indicies: HashMap<String, u32> = lines
         .iter()
         .map(|(v, _)| v.name.clone())
@@ -64,16 +79,13 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
         .map(|(i, v)| (v, i as u32))
         .collect();
     for (valve, neighs) in lines {
-        let ns: Vec<u32> = neighs
+        let ns: ArrayVec<u32, MAX_NEIGHBORS> = neighs
             .iter()
             .map(|name| *valve_bit_indicies.get(name).unwrap())
             .collect();
 
-        edges.insert(*valve_bit_indicies.get(&valve.name).unwrap(), ns);
-        flow_rates.insert(
-            *valve_bit_indicies.get(&valve.name).unwrap(),
-            valve.flow_rate,
-        );
+        edges[*valve_bit_indicies.get(&valve.name).unwrap() as usize] = ns;
+        flow_rates[*valve_bit_indicies.get(&valve.name).unwrap() as usize] = valve.flow_rate;
     }
 
     let pos_aa = *valve_bit_indicies.get(&"AA".to_string()).unwrap();
@@ -141,8 +153,8 @@ fn max_relief_with_elephant(
     time: u32,
     current: (u32, u32),
     cache: &mut HashMap<((u32, u32), u32, States), u64>,
-    edges: &HashMap<u32, Vec<u32>>,
-    flow_rates: &HashMap<u32, u32>,
+    edges: &[ArrayVec<u32, MAX_NEIGHBORS>],
+    flow_rates: &[u32],
     states: States,
 ) -> u64 {
     if time == TOTAL_TIME_WITH_ELEPHANT {
@@ -154,19 +166,19 @@ fn max_relief_with_elephant(
 
     let mut relief = 0;
 
-    let mut my_options = Vec::new();
-    if states.is_open(current.0) && *flow_rates.get(&current.0).unwrap() > 0 {
+    let mut my_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
+    if states.is_open(current.0) && flow_rates[current.0 as usize] > 0 {
         my_options.push(Turn::Open(current.0));
     }
-    for neighbor in edges.get(&current.0).unwrap() {
+    for neighbor in &edges[current.0 as usize] {
         my_options.push(Turn::Move(*neighbor));
     }
 
-    let mut elephant_options = Vec::new();
-    if states.is_open(current.1) && *flow_rates.get(&current.1).unwrap() > 0 {
+    let mut elephant_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
+    if states.is_open(current.1) && flow_rates[current.1 as usize] > 0 {
         elephant_options.push(Turn::Open(current.1));
     }
-    for neighbor in edges.get(&current.1).unwrap() {
+    for neighbor in &edges[current.1 as usize] {
         elephant_options.push(Turn::Move(*neighbor));
     }
 
@@ -183,8 +195,8 @@ fn max_relief_with_elephant(
         match my_move {
             Turn::Open(valve) => {
                 states.close(*valve);
-                total_relief += ((TOTAL_TIME_WITH_ELEPHANT - time - 1)
-                    * *flow_rates.get(&current.0).unwrap()) as u64;
+                total_relief +=
+                    ((TOTAL_TIME_WITH_ELEPHANT - time - 1) * flow_rates[current.0 as usize]) as u64;
             }
             Turn::Move(valve) => {
                 next_pos.0 = *valve;
@@ -193,8 +205,8 @@ fn max_relief_with_elephant(
         match elephant_move {
             Turn::Open(valve) => {
                 states.close(*valve);
-                total_relief += ((TOTAL_TIME_WITH_ELEPHANT - time - 1)
-                    * *flow_rates.get(&current.1).unwrap()) as u64;
+                total_relief +=
+                    ((TOTAL_TIME_WITH_ELEPHANT - time - 1) * flow_rates[current.1 as usize]) as u64;
             }
             Turn::Move(valve) => {
                 next_pos.1 = *valve;
@@ -261,26 +273,25 @@ mod tests {
     #[test]
     fn test_part_one_sample() {
         let ans = part01(SAMPLE).unwrap();
-        assert_eq!(2250, ans);
+        assert_eq!(1651, ans);
     }
 
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(696, ans);
+        assert_eq!(2250, ans);
     }
 
     #[test]
-    #[ignore]
     fn test_part_two_sample() {
-        let ans = part02(SAMPLE).unwrap();
+        let ans = part02_inner::<10>(SAMPLE).unwrap();
         assert_eq!(1707, ans);
     }
 
     #[test]
     #[ignore]
     fn test_part_two() {
-        let ans = part02(INPUT).unwrap();
+        let ans = part02_inner::<55>(INPUT).unwrap();
         assert_eq!(3015, ans);
     }
 }
