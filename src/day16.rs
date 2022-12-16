@@ -170,16 +170,20 @@ fn max_relief_with_elephant(
     if states.is_open(current.0) && flow_rates[current.0 as usize] > 0 {
         my_options.push(Turn::Open(current.0));
     }
-    for neighbor in &edges[current.0 as usize] {
-        my_options.push(Turn::Move(*neighbor));
+    if time < TOTAL_TIME_WITH_ELEPHANT - 1 {
+        for neighbor in &edges[current.0 as usize] {
+            my_options.push(Turn::Move(*neighbor));
+        }
     }
 
     let mut elephant_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
     if states.is_open(current.1) && flow_rates[current.1 as usize] > 0 {
         elephant_options.push(Turn::Open(current.1));
     }
-    for neighbor in &edges[current.1 as usize] {
-        elephant_options.push(Turn::Move(*neighbor));
+    if time < TOTAL_TIME_WITH_ELEPHANT - 1 {
+        for neighbor in &edges[current.1 as usize] {
+            elephant_options.push(Turn::Move(*neighbor));
+        }
     }
 
     for (my_move, elephant_move) in my_options.iter().cartesian_product(elephant_options.iter()) {
