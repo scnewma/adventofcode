@@ -4,7 +4,7 @@ use bittle::Bits;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
-        // part01: part01(input)?.to_string(),
+        // part01: part01(input.trim_end())?.to_string(),
         part01: "".to_string(),
         part02: part02(input)?.to_string(),
     })
@@ -14,6 +14,7 @@ const BOT_GAP: usize = 3;
 const DEBUG: bool = false;
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
+    let input = input.trim_end();
     let rocks = vec![
         // (height, mask)
         // room is only 7 wide so the leftmost bit MUST always be 1
@@ -50,7 +51,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
                     }
                     shr
                 }
-                _ch => continue,
+                _ => panic!(),
             };
             let mut new_sprite = sprite.clone();
             let mut hit_wall = false;
@@ -105,6 +106,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
+    let input = input.trim_end();
     let rocks = [
         // (height, mask)
         // room is only 7 wide so the leftmost bit MUST always be 1
@@ -115,6 +117,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         (4, [0b0010000u8, 0b0010000u8, 0b0010000u8, 0b0010000u8]), // Vertical Line
         (2, [0u8, 0u8, 0b0011000u8, 0b0011000u8]), // Box
     ];
+    // let rle = compress_str(input);
+    // println!("{:?} = {}", rle, rle.len());
     let mut jets = input.chars().cycle();
     let mut grid = ArrayVec::<u8, 550>::new();
     (0..grid.capacity()).for_each(|_| grid.push(0));
@@ -123,7 +127,13 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     let mut highest = 0;
     // const ROCKS: usize = 1_000_000_000_000;
     const ROCKS: usize = 2022;
-    for rock in rocks.into_iter().cycle().take(ROCKS) {
+    loop {
+        // for rock in rocks.into_iter().cycle().take(ROCKS) {
+        if num_rocks == ROCKS {
+            break;
+        }
+
+        let rock = rocks[num_rocks % 5];
         num_rocks += 1;
         if num_rocks % 10_000_000 == 0 {
             println!(
@@ -169,6 +179,36 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         //     draw(&grid, sprite, y);
         // }
 
+        // OPTIMIZATION: you do not need to check for collisions with rocks for the first 3 moves
+        // since we always spawn at least 3 units above the highest rock.
+        for _ in 0..3 {
+            let jet = unsafe { jets.next().unwrap_unchecked() };
+            match jet {
+                '<' => {
+                    // hits wall if leftmost (7th) bit is 1
+                    // * only need to check bottom 2 rows as that is where the max width is
+                    if (sprite[2] >> 6) & 1 == 0 && (sprite[3] >> 6) & 1 == 0 {
+                        sprite[0] = shl_unchecked(sprite[0]);
+                        sprite[1] = shl_unchecked(sprite[1]);
+                        sprite[2] = shl_unchecked(sprite[2]);
+                        sprite[3] = shl_unchecked(sprite[3]);
+                    }
+                }
+                '>' => {
+                    // hits wall if rightmost bit is 1
+                    // * only need to check bottom 2 rows as that is where the max width is
+                    if sprite[2] & 1 == 0 && sprite[3] & 1 == 0 {
+                        sprite[0] >>= 1;
+                        sprite[1] >>= 1;
+                        sprite[2] >>= 1;
+                        sprite[3] >>= 1;
+                    }
+                }
+                _ => panic!(),
+            }
+            y += 1;
+        }
+
         loop {
             // move left / right, if necessary
             let jet = unsafe { jets.next().unwrap_unchecked() };
@@ -180,16 +220,13 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 
                     // hits wall if leftmost (7th) bit is 1
                     // * only need to check bottom 2 rows as that is where the max width is
-                    if sprite[2] & 0b01000000u8 == 0b01000000u8
-                        || sprite[3] & 0b01000000u8 == 0b01000000u8
-                        // check if hit rock
-                        || grid[y] & shl_unchecked(sprite[3]) != 0
-                        || grid[y - 1] & shl_unchecked(sprite[2]) != 0
-                        || grid[y - 2] & shl_unchecked(sprite[1]) != 0
-                        || grid[y - 3] & shl_unchecked(sprite[0]) != 0
+                    if (sprite[2] >> 6) & 1 == 0
+                        && (sprite[3] >> 6) & 1 == 0
+                        && grid[y] & shl_unchecked(sprite[3]) == 0
+                        && grid[y - 1] & shl_unchecked(sprite[2]) == 0
+                        && grid[y - 2] & shl_unchecked(sprite[1]) == 0
+                        && grid[y - 3] & shl_unchecked(sprite[0]) == 0
                     {
-                        // hit wall
-                    } else {
                         sprite[0] = shl_unchecked(sprite[0]);
                         sprite[1] = shl_unchecked(sprite[1]);
                         sprite[2] = shl_unchecked(sprite[2]);
@@ -203,23 +240,21 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 
                     // hits wall if rightmost bit is 1
                     // * only need to check bottom 2 rows as that is where the max width is
-                    if sprite[2] & 1 == 1
-                        || sprite[3] & 1 == 1
+                    if sprite[2] & 1 == 0
+                        && sprite[3] & 1 == 0
                         // check if hit rock
-                        || grid[y] & sprite[3] >> 1 != 0
-                        || grid[y - 1] & sprite[2] >> 1 != 0
-                        || grid[y - 2] & sprite[1] >> 1 != 0
-                        || grid[y - 3] & sprite[0] >> 1 != 0
+                        && grid[y] & sprite[3] >> 1 == 0
+                        && grid[y - 1] & sprite[2] >> 1 == 0
+                        && grid[y - 2] & sprite[1] >> 1 == 0
+                        && grid[y - 3] & sprite[0] >> 1 == 0
                     {
-                        // hit wall
-                    } else {
                         sprite[0] >>= 1;
                         sprite[1] >>= 1;
                         sprite[2] >>= 1;
                         sprite[3] >>= 1;
                     }
                 }
-                _ch => continue,
+                _ => panic!(),
             }
 
             // if DEBUG {
@@ -274,6 +309,20 @@ fn shr(line: u8) -> Option<u8> {
     }
 }
 
+fn compress_str(input: &str) -> Vec<(char, u32)> {
+    let mut chars = input.chars().peekable();
+    let mut count = 0;
+    let mut rle = Vec::new();
+    while let Some(ch) = chars.next() {
+        count += 1;
+        if chars.peek() != Some(&ch) {
+            rle.push((ch, count));
+            count = 0;
+        }
+    }
+    rle
+}
+
 fn draw(grid: &[u8], sprite: [u8; 4], sprite_y: usize) {
     for y in 0..grid.len() {
         for x in (0..7).rev() {
@@ -323,5 +372,13 @@ mod tests {
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
         assert_eq!(0, ans);
+    }
+
+    #[test]
+    fn test_compress_str() {
+        assert_eq!(vec![('<', 1)], compress_str("<"));
+        assert_eq!(vec![('<', 1), ('>', 1)], compress_str("<>"));
+        assert_eq!(vec![('<', 2), ('>', 1)], compress_str("<<>"));
+        assert_eq!(vec![('<', 2), ('>', 1), ('<', 2)], compress_str("<<><<"));
     }
 }
