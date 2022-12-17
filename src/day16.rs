@@ -261,17 +261,16 @@ mod tests {
     #[test]
     fn test_part_one_sample() {
         let ans = part01(SAMPLE).unwrap();
-        assert_eq!(2250, ans);
+        assert_eq!(1651, ans);
     }
 
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(696, ans);
+        assert_eq!(2250, ans);
     }
 
     #[test]
-    #[ignore]
     fn test_part_two_sample() {
         let ans = part02(SAMPLE).unwrap();
         assert_eq!(1707, ans);
