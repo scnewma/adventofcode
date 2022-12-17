@@ -102,8 +102,135 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     Ok(highest)
 }
 
-pub fn part02(_input: &str) -> anyhow::Result<u64> {
-    Ok(0)
+pub fn part02(input: &str) -> anyhow::Result<usize> {
+    let rocks = vec![
+        // (height, mask)
+        // room is only 7 wide so the leftmost bit MUST always be 1
+        // * will need to handle this in the algorithm with an XOR or something
+        (1, [0u8, 0u8, 0u8, 0b0011110u8]), // Horizonal Line
+        (3, [0u8, 0b0001000u8, 0b0011100u8, 0b0001000u8]), // Plus
+        (3, [0u8, 0b0000100u8, 0b0000100u8, 0b0011100u8]), // J
+        (4, [0b0010000u8, 0b0010000u8, 0b0010000u8, 0b0010000u8]), // Vertical Line
+        (2, [0u8, 0u8, 0b0011000u8, 0b0011000u8]), // Box
+    ];
+    let mut jets = input.chars().cycle();
+    let mut grid = vec![0u8; 100];
+    let mut num_rocks = 0;
+    let mut grid_max = 0;
+    let mut discarded = 0;
+    let mut highest = 0;
+    const ROCKS: usize = 1000000000000;
+    // const ROCKS: usize = 2022;
+    for rock in rocks.into_iter().cycle().take(ROCKS) {
+        num_rocks += 1;
+        grid_max = grid_max.max(grid.len());
+        if num_rocks % 1000 == 0 {
+            println!("rocks={num_rocks} grid_max={grid_max}");
+        }
+        let mut sprite = rock.1;
+        // let mut y = grid.len() - 1 - highest - BOT_GAP;
+        let mut y = match grid.len().checked_sub(1 + highest + BOT_GAP) {
+            Some(v) if v > 3 => v,
+            _ => {
+                // println!("extending");
+                (0..5).for_each(|_| grid.insert(0, 0u8));
+                grid.len() - 1 - highest - BOT_GAP
+            }
+        };
+        // if y < 3 {
+        //     // panic!("grid ran out of room; rock={num_rocks}");
+        // }
+        if DEBUG {
+            println!("new rock");
+            draw(&grid, sprite, y);
+        }
+
+        loop {
+            // move left / right, if necessary
+            let shfn = match jets.next().unwrap() {
+                '<' => {
+                    if DEBUG {
+                        println!("move left");
+                    }
+                    shl
+                }
+                '>' => {
+                    if DEBUG {
+                        println!("move right");
+                    }
+                    shr
+                }
+                _ch => continue,
+            };
+            let mut new_sprite = sprite.clone();
+            let mut hit_wall = false;
+            for i in 0..4 {
+                match shfn(sprite[i]) {
+                    Some(line) => {
+                        new_sprite[i] = line;
+                        let prev = grid[y - (4 - i - 1)] | sprite[i];
+                        let shifted = grid[y - (4 - i - 1)] | line;
+                        if shifted.count_ones() != prev.count_ones() {
+                            hit_wall = true;
+                            break;
+                        }
+                    }
+                    None => {
+                        hit_wall = true;
+                        break;
+                    }
+                }
+            }
+
+            if !hit_wall {
+                if DEBUG {
+                    println!("success");
+                }
+                sprite = new_sprite;
+            }
+            if DEBUG {
+                draw(&grid, sprite, y);
+
+                println!("move down");
+            }
+            if y == grid.len() - 1 || (sprite[3] & grid[y + 1] != 0 || sprite[2] & grid[y] != 0) {
+                // put sprite in grid
+                for i in 0..4 {
+                    grid[y - (4 - i - 1)] |= sprite[i];
+
+                    // if this row is full no other rocks will be able to fall below this line so
+                    // let's trim the grid
+                    let idx = y - (4 - i - 1);
+                    if grid[idx] == 0b01111111u8 {
+                        // shorten grid
+                        let discard = grid.len() - idx;
+                        discarded += discard;
+                        // dbg!(num_rocks, idx, y, discard, highest);
+                        highest -= discard;
+                        // y += discard;
+                        // TODO: there is probably a much more efficient way to do this
+                        grid = grid[0..idx].to_vec();
+                        // println!("discarded {discard}");
+
+                        // don't need to place the rest of the sprite since it's below the current
+                        // line
+                        break;
+                    }
+                }
+                highest = highest.max(grid.len() - y - 1 + rock.0);
+                if DEBUG {
+                    println!("came to a rest; highest={highest}");
+                    draw(&grid, [0; 4], y);
+                }
+                break;
+            }
+            y += 1;
+            if DEBUG {
+                draw(&grid, sprite, y);
+            }
+        }
+    }
+    Ok(highest + discarded)
 }
 
 fn shl(line: u8) -> Option<u8> {
