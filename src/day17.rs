@@ -179,15 +179,14 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                     // }
 
                     // hits wall if leftmost (7th) bit is 1
-                    if sprite[0] & 0b01000000u8 == 0b01000000u8
-                        || sprite[1] & 0b01000000u8 == 0b01000000u8
-                        || sprite[2] & 0b01000000u8 == 0b01000000u8
+                    // * only need to check bottom 2 rows as that is where the max width is
+                    if sprite[2] & 0b01000000u8 == 0b01000000u8
                         || sprite[3] & 0b01000000u8 == 0b01000000u8
                         // check if hit rock
-                        || grid[y - 3] & shl_unchecked(sprite[0]) != 0
-                        || grid[y - 2] & shl_unchecked(sprite[1]) != 0
-                        || grid[y - 1] & shl_unchecked(sprite[2]) != 0
                         || grid[y] & shl_unchecked(sprite[3]) != 0
+                        || grid[y - 1] & shl_unchecked(sprite[2]) != 0
+                        || grid[y - 2] & shl_unchecked(sprite[1]) != 0
+                        || grid[y - 3] & shl_unchecked(sprite[0]) != 0
                     {
                         // hit wall
                     } else {
@@ -203,15 +202,14 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                     // }
 
                     // hits wall if rightmost bit is 1
-                    if sprite[0] & 1 == 1
-                        || sprite[1] & 1 == 1
-                        || sprite[2] & 1 == 1
+                    // * only need to check bottom 2 rows as that is where the max width is
+                    if sprite[2] & 1 == 1
                         || sprite[3] & 1 == 1
                         // check if hit rock
-                        || grid[y - 3] & sprite[0] >> 1 != 0
-                        || grid[y - 2] & sprite[1] >> 1 != 0
-                        || grid[y - 1] & sprite[2] >> 1 != 0
                         || grid[y] & sprite[3] >> 1 != 0
+                        || grid[y - 1] & sprite[2] >> 1 != 0
+                        || grid[y - 2] & sprite[1] >> 1 != 0
+                        || grid[y - 3] & sprite[0] >> 1 != 0
                     {
                         // hit wall
                     } else {
