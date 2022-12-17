@@ -127,7 +127,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     for rock in rocks.into_iter().cycle().take(ROCKS) {
         num_rocks += 1;
         grid_max = grid_max.max(grid.len());
-        if num_rocks % 1_000_000 == 0 {
+        if num_rocks % 10_000_000 == 0 {
             println!(
                 "rocks={num_rocks} grid_max={grid_max} ({:.5}%)",
                 num_rocks as f64 / ROCKS as f64
@@ -159,6 +159,13 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                 grid.len().checked_sub(1 + highest + BOT_GAP).unwrap()
             }
         };
+
+        // enable to check wierd edge cases
+        // if y < 3 {
+        //     draw(&grid, sprite, y);
+        //     panic!()
+        // }
+
         if DEBUG {
             println!("new rock");
             draw(&grid, sprite, y);
@@ -167,57 +174,70 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         loop {
             // move left / right, if necessary
             let jet = unsafe { jets.next().unwrap_unchecked() };
-            let shfn = match jet {
+            match jet {
                 '<' => {
                     if DEBUG {
                         println!("move left");
                     }
-                    shl
+                    let new_sprite = [
+                        shl_unchecked(sprite[0]),
+                        shl_unchecked(sprite[1]),
+                        shl_unchecked(sprite[2]),
+                        shl_unchecked(sprite[3]),
+                    ];
+
+                    // hits wall if leftmost (7th) bit is 1
+                    if sprite[0] & 0b01000000u8 == 0b01000000u8
+                        || sprite[1] & 0b01000000u8 == 0b01000000u8
+                        || sprite[2] & 0b01000000u8 == 0b01000000u8
+                        || sprite[3] & 0b01000000u8 == 0b01000000u8
+                        // check if hit rock
+                        || grid[y - 3] & new_sprite[0] != 0
+                        || grid[y - 2] & new_sprite[1] != 0
+                        || grid[y - 1] & new_sprite[2] != 0
+                        || grid[y] & new_sprite[3] != 0
+                    {
+                        // hit wall
+                    } else {
+                        sprite = new_sprite;
+                    }
                 }
                 '>' => {
                     if DEBUG {
                         println!("move right");
                     }
-                    shr
+                    let new_sprite = [
+                        shr_unchecked(sprite[0]),
+                        shr_unchecked(sprite[1]),
+                        shr_unchecked(sprite[2]),
+                        shr_unchecked(sprite[3]),
+                    ];
+
+                    // hits wall if rightmost bit is 1
+                    if sprite[0] & 1 == 1
+                        || sprite[1] & 1 == 1
+                        || sprite[2] & 1 == 1
+                        || sprite[3] & 1 == 1
+                        // check if hit rock
+                        || grid[y - 3] & new_sprite[0] != 0
+                        || grid[y - 2] & new_sprite[1] != 0
+                        || grid[y - 1] & new_sprite[2] != 0
+                        || grid[y] & new_sprite[3] != 0
+                    {
+                        // hit wall
+                    } else {
+                        sprite = new_sprite;
+                    }
                 }
                 _ch => continue,
-            };
-            let mut new_sprite = sprite.clone();
-            let mut hit_wall = false;
-            for i in 0..4 {
-                match shfn(sprite[i]) {
-                    Some(line) => {
-                        new_sprite[i] = line;
-                        let prev = grid[y - (4 - i - 1)] | sprite[i];
-                        let shifted = grid[y - (4 - i - 1)] | line;
-                        if shifted.count_ones() != prev.count_ones() {
-                            hit_wall = true;
-                            break;
-                        }
-                    }
-                    None => {
-                        hit_wall = true;
-                        break;
-                    }
-                }
             }
 
-            if !hit_wall {
-                if DEBUG {
-                    println!("success");
-                }
-                sprite = new_sprite;
-            }
             if DEBUG {
                 draw(&grid, sprite, y);
 
                 println!("move down");
             }
             if y == grid.len() - 1 || (sprite[3] & grid[y + 1] != 0 || sprite[2] & grid[y] != 0) {
-                // put sprite in grid
-                // for i in 0..4 {
-                //     grid[y - (4 - i - 1)] |= sprite[i];
-                // }
                 grid[y - 3] |= sprite[0];
                 grid[y - 2] |= sprite[1];
                 grid[y - 1] |= sprite[2];
@@ -236,6 +256,16 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         }
     }
     Ok(highest + discarded)
+}
+
+#[inline]
+fn shl_unchecked(line: u8) -> u8 {
+    line << 1 & 0b01111111u8
+}
+
+#[inline]
+fn shr_unchecked(line: u8) -> u8 {
+    line >> 1
 }
 
 fn shl(line: u8) -> Option<u8> {
