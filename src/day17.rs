@@ -122,8 +122,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     let mut grid_max = 0;
     let mut discarded = 0;
     let mut highest = 0;
-    const ROCKS: usize = 1000000000000;
-    // const ROCKS: usize = 2022;
+    // const ROCKS: usize = 1000000000000;
+    const ROCKS: usize = 2022;
     for rock in rocks.into_iter().cycle().take(ROCKS) {
         num_rocks += 1;
         grid_max = grid_max.max(grid.len());
@@ -134,7 +134,6 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             );
         }
         let mut sprite = rock.1;
-        // let mut y = grid.len() - 1 - highest - BOT_GAP;
         let mut y = match grid.len().checked_sub(1 + highest + BOT_GAP) {
             Some(v) if v > 3 => v,
             _ => {
@@ -145,25 +144,19 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                         discarded += discard;
                         highest -= discard;
 
-                        let mut ng = ArrayVec::<u8, 600>::new();
-                        (0..ng.capacity()).for_each(|_| ng.push(0));
-                        let mut ngi = 599;
-                        for i in (0..idx).rev() {
-                            ng[ngi] = grid[i];
-                            ngi -= 1;
+                        for i in (0..grid.len()).rev() {
+                            if discard > i {
+                                grid[i] = 0;
+                            } else {
+                                grid[i] = grid[i - discard];
+                            }
                         }
-                        grid = ng;
 
                         // we only need to compress from the highest row
                         break;
                     }
                 }
                 grid.len().checked_sub(1 + highest + BOT_GAP).unwrap()
-                // panic!(
-                //     "grid ran out of capacity rock={num_rocks} len={}, highest={}",
-                //     grid.len(),
-                //     highest
-                // )
             }
         };
         if DEBUG {
@@ -173,7 +166,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 
         loop {
             // move left / right, if necessary
-            let shfn = match jets.next().unwrap() {
+            let jet = unsafe { jets.next().unwrap_unchecked() };
+            let shfn = match jet {
                 '<' => {
                     if DEBUG {
                         println!("move left");
@@ -221,36 +215,13 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             }
             if y == grid.len() - 1 || (sprite[3] & grid[y + 1] != 0 || sprite[2] & grid[y] != 0) {
                 // put sprite in grid
-                for i in 0..4 {
-                    grid[y - (4 - i - 1)] |= sprite[i];
-
-                    // if this row is full no other rocks will be able to fall below this line so
-                    // let's trim the grid
-                    // let idx = y - (4 - i - 1);
-                    // if grid[idx] == 0b01111111u8 {
-                    //     // shorten grid
-                    //     let discard = grid.len() - idx;
-                    //     discarded += discard;
-                    //     // dbg!(num_rocks, idx, y, discard, highest);
-                    //     highest -= discard;
-                    //     y += discard;
-                    //     // TODO: there is probably a much more efficient way to do this
-                    //     // grid = grid[0..idx].to_vec();
-                    //     let mut ng = ArrayVec::<u8, 600>::new();
-                    //     (0..ng.capacity()).for_each(|_| ng.push(0));
-                    //     let mut ngi = 599;
-                    //     for i in (0..idx).rev() {
-                    //         ng[ngi] = grid[i];
-                    //         ngi -= 1;
-                    //     }
-                    //     grid = ng;
-                    //     // println!("discarded {discard}");
-
-                    //     // don't need to place the rest of the sprite since it's below the current
-                    //     // line
-                    //     break;
-                    // }
-                }
+                // for i in 0..4 {
+                //     grid[y - (4 - i - 1)] |= sprite[i];
+                // }
+                grid[y - 3] |= sprite[0];
+                grid[y - 2] |= sprite[1];
+                grid[y - 1] |= sprite[2];
+                grid[y] |= sprite[3];
                 highest = highest.max(grid.len() - y - 1 + rock.0);
                 if DEBUG {
                     println!("came to a rest; highest={highest}");
