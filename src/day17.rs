@@ -116,20 +116,18 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         (2, [0u8, 0u8, 0b0011000u8, 0b0011000u8]), // Box
     ];
     let mut jets = input.chars().cycle();
-    let mut grid = ArrayVec::<u8, 600>::new();
+    let mut grid = ArrayVec::<u8, 550>::new();
     (0..grid.capacity()).for_each(|_| grid.push(0));
     let mut num_rocks = 0;
-    let mut grid_max = 0;
     let mut discarded = 0;
     let mut highest = 0;
-    // const ROCKS: usize = 1000000000000;
+    // const ROCKS: usize = 1_000_000_000_000;
     const ROCKS: usize = 2022;
     for rock in rocks.into_iter().cycle().take(ROCKS) {
         num_rocks += 1;
-        grid_max = grid_max.max(grid.len());
         if num_rocks % 10_000_000 == 0 {
             println!(
-                "rocks={num_rocks} grid_max={grid_max} ({:.5}%)",
+                "rocks={num_rocks} ({:.5}%)",
                 num_rocks as f64 / ROCKS as f64
             );
         }
@@ -166,25 +164,19 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         //     panic!()
         // }
 
-        if DEBUG {
-            println!("new rock");
-            draw(&grid, sprite, y);
-        }
+        // if DEBUG {
+        //     println!("new rock");
+        //     draw(&grid, sprite, y);
+        // }
 
         loop {
             // move left / right, if necessary
             let jet = unsafe { jets.next().unwrap_unchecked() };
             match jet {
                 '<' => {
-                    if DEBUG {
-                        println!("move left");
-                    }
-                    let new_sprite = [
-                        shl_unchecked(sprite[0]),
-                        shl_unchecked(sprite[1]),
-                        shl_unchecked(sprite[2]),
-                        shl_unchecked(sprite[3]),
-                    ];
+                    // if DEBUG {
+                    //     println!("move left");
+                    // }
 
                     // hits wall if leftmost (7th) bit is 1
                     if sprite[0] & 0b01000000u8 == 0b01000000u8
@@ -192,26 +184,23 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                         || sprite[2] & 0b01000000u8 == 0b01000000u8
                         || sprite[3] & 0b01000000u8 == 0b01000000u8
                         // check if hit rock
-                        || grid[y - 3] & new_sprite[0] != 0
-                        || grid[y - 2] & new_sprite[1] != 0
-                        || grid[y - 1] & new_sprite[2] != 0
-                        || grid[y] & new_sprite[3] != 0
+                        || grid[y - 3] & shl_unchecked(sprite[0]) != 0
+                        || grid[y - 2] & shl_unchecked(sprite[1]) != 0
+                        || grid[y - 1] & shl_unchecked(sprite[2]) != 0
+                        || grid[y] & shl_unchecked(sprite[3]) != 0
                     {
                         // hit wall
                     } else {
-                        sprite = new_sprite;
+                        sprite[0] = shl_unchecked(sprite[0]);
+                        sprite[1] = shl_unchecked(sprite[1]);
+                        sprite[2] = shl_unchecked(sprite[2]);
+                        sprite[3] = shl_unchecked(sprite[3]);
                     }
                 }
                 '>' => {
-                    if DEBUG {
-                        println!("move right");
-                    }
-                    let new_sprite = [
-                        shr_unchecked(sprite[0]),
-                        shr_unchecked(sprite[1]),
-                        shr_unchecked(sprite[2]),
-                        shr_unchecked(sprite[3]),
-                    ];
+                    // if DEBUG {
+                    //     println!("move right");
+                    // }
 
                     // hits wall if rightmost bit is 1
                     if sprite[0] & 1 == 1
@@ -219,40 +208,43 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                         || sprite[2] & 1 == 1
                         || sprite[3] & 1 == 1
                         // check if hit rock
-                        || grid[y - 3] & new_sprite[0] != 0
-                        || grid[y - 2] & new_sprite[1] != 0
-                        || grid[y - 1] & new_sprite[2] != 0
-                        || grid[y] & new_sprite[3] != 0
+                        || grid[y - 3] & sprite[0] >> 1 != 0
+                        || grid[y - 2] & sprite[1] >> 1 != 0
+                        || grid[y - 1] & sprite[2] >> 1 != 0
+                        || grid[y] & sprite[3] >> 1 != 0
                     {
                         // hit wall
                     } else {
-                        sprite = new_sprite;
+                        sprite[0] >>= 1;
+                        sprite[1] >>= 1;
+                        sprite[2] >>= 1;
+                        sprite[3] >>= 1;
                     }
                 }
                 _ch => continue,
             }
 
-            if DEBUG {
-                draw(&grid, sprite, y);
+            // if DEBUG {
+            //     draw(&grid, sprite, y);
 
-                println!("move down");
-            }
+            //     println!("move down");
+            // }
             if y == grid.len() - 1 || (sprite[3] & grid[y + 1] != 0 || sprite[2] & grid[y] != 0) {
                 grid[y - 3] |= sprite[0];
                 grid[y - 2] |= sprite[1];
                 grid[y - 1] |= sprite[2];
                 grid[y] |= sprite[3];
                 highest = highest.max(grid.len() - y - 1 + rock.0);
-                if DEBUG {
-                    println!("came to a rest; highest={highest}");
-                    draw(&grid, [0; 4], y);
-                }
+                // if DEBUG {
+                //     println!("came to a rest; highest={highest}");
+                //     draw(&grid, [0; 4], y);
+                // }
                 break;
             }
             y += 1;
-            if DEBUG {
-                draw(&grid, sprite, y);
-            }
+            // if DEBUG {
+            //     draw(&grid, sprite, y);
+            // }
         }
     }
     Ok(highest + discarded)
@@ -261,11 +253,6 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 #[inline]
 fn shl_unchecked(line: u8) -> u8 {
     line << 1 & 0b01111111u8
-}
-
-#[inline]
-fn shr_unchecked(line: u8) -> u8 {
-    line >> 1
 }
 
 fn shl(line: u8) -> Option<u8> {
