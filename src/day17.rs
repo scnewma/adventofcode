@@ -132,30 +132,30 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             );
         }
         let mut sprite = rock.1;
-        let mut y = match grid.len().checked_sub(1 + highest + BOT_GAP) {
-            Some(v) if v > 3 => v,
-            _ => {
-                // compress grid
-                for idx in 0..grid.len() {
-                    if grid[idx] == 0b01111111u8 {
-                        let discard = grid.len() - idx;
-                        discarded += discard;
-                        highest -= discard;
+        // 5 = 1 (idx offset) + 4 (height of sprite)
+        let mut y = if 5 + highest + BOT_GAP > grid.len() {
+            // compress grid
+            for idx in 0..grid.len() {
+                if grid[idx] == 0b01111111u8 {
+                    let discard = grid.len() - idx;
+                    discarded += discard;
+                    highest -= discard;
 
-                        for i in (0..grid.len()).rev() {
-                            if discard > i {
-                                grid[i] = 0;
-                            } else {
-                                grid[i] = grid[i - discard];
-                            }
+                    for i in (0..grid.len()).rev() {
+                        if discard > i {
+                            grid[i] = 0;
+                        } else {
+                            grid[i] = grid[i - discard];
                         }
-
-                        // we only need to compress from the highest row
-                        break;
                     }
+
+                    // we only need to compress from the highest row
+                    break;
                 }
-                grid.len().checked_sub(1 + highest + BOT_GAP).unwrap()
             }
+            grid.len() - 1 - highest - BOT_GAP
+        } else {
+            grid.len() - 1 - highest - BOT_GAP
         };
 
         // enable to check wierd edge cases
