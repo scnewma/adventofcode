@@ -123,7 +123,7 @@ fn max_relief(
     // we also don't need to go down this path if the flow rate is 0 since it won't contribute
     let current_valve_flow_rate = *flow_rates.get(&current_valve).unwrap();
     if states.is_open(current_valve) && current_valve_flow_rate > 0 {
-        let mut states = states.clone();
+        let mut states = states;
         states.close(current_valve);
 
         let total_relief = ((TOTAL_TIME - time - 1) * current_valve_flow_rate) as u64
@@ -193,8 +193,8 @@ fn max_relief_with_elephant(
             _ => (),
         }
 
-        let mut next_pos = current.clone();
-        let mut states = states.clone();
+        let mut next_pos = current;
+        let mut states = states;
         let mut total_relief = 0;
         match my_move {
             Turn::Open(valve) => {

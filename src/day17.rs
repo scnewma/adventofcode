@@ -50,7 +50,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
                 }
                 _ch => continue,
             };
-            let mut new_sprite = sprite.clone();
+            let mut new_sprite = sprite;
             let mut hit_wall = false;
             for i in 0..4 {
                 match shfn(sprite[i]) {
