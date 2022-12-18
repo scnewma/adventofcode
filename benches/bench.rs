@@ -6,7 +6,7 @@ macro_rules! gen_benches {
             $(
                 {
                     use adventofcode22::$day;
-                    const INPUT: &str = include_str!(concat!("../inputs/", stringify!($day), ".sample.txt"));
+                    const INPUT: &str = include_str!(concat!("../inputs/", stringify!($day), ".input.txt"));
                     c.bench_function(concat!(stringify!($day), "::part01"), |b| b
                         .iter(|| $day::part01(INPUT)));
                     c.bench_function(concat!(stringify!($day), "::part02"), |b| b
@@ -19,7 +19,7 @@ macro_rules! gen_benches {
 
 gen_benches![
     day01, day02, day03, day04, day05, day06, day07, day08, day09, day12, day13, day14, day15,
-    day16, day18
+    day16, day17, day18
 ];
 
 criterion_group!(benches, criterion_benchmark);
