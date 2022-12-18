@@ -464,7 +464,7 @@ mod tests {
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1500874635587, ans);
     }
 
     #[test]
