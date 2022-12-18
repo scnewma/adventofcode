@@ -6,8 +6,8 @@ use bittle::Bits;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
-        // part01: part01(input.trim_end())?.to_string(),
-        part01: "".to_string(),
+        part01: part01(input.trim_end())?.to_string(),
+        // part01: "".to_string(),
         part02: part02(input)?.to_string(),
     })
 }
@@ -17,7 +17,7 @@ const DEBUG: bool = false;
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let input = input.trim_end();
-    let rocks = vec![
+    let rocks = [
         // (height, mask)
         // room is only 7 wide so the leftmost bit MUST always be 1
         // * will need to handle this in the algorithm with an XOR or something
@@ -28,83 +28,75 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
         (2, [0u8, 0u8, 0b0011000u8, 0b0011000u8]), // Box
     ];
     let mut jets = input.chars().cycle();
-    let mut grid = vec![0u8; 5000];
+    let mut grid = ArrayVec::<u8, 50000>::new();
+    (0..grid.capacity()).for_each(|_| grid.push(0));
+    let mut num_rocks = 0;
     let mut highest = 0;
-    for rock in rocks.into_iter().cycle().take(2022) {
+    const ROCKS: usize = 2022;
+    loop {
+        if num_rocks == ROCKS {
+            break Ok(highest);
+        }
+
+        let rock = rocks[num_rocks % 5];
+        num_rocks += 1;
+
         let mut sprite = rock.1;
         let mut y = grid.len() - 1 - highest - BOT_GAP;
-        if DEBUG {
-            println!("new rock");
-            draw(&grid, sprite, y);
-        }
 
         loop {
             // move left / right, if necessary
-            let shfn = match jets.next().unwrap() {
+            let jet = unsafe { jets.next().unwrap_unchecked() };
+            match jet {
                 '<' => {
-                    if DEBUG {
-                        println!("move left");
+                    // hits wall if leftmost (7th) bit is 1
+                    // * only need to check bottom 2 rows as that is where the max width is
+                    if (sprite[2] >> 6) & 1 == 0
+                        && (sprite[3] >> 6) & 1 == 0
+                        && grid[y] & shl_unchecked(sprite[3]) == 0
+                        && grid[y - 1] & shl_unchecked(sprite[2]) == 0
+                        && grid[y - 2] & shl_unchecked(sprite[1]) == 0
+                        && grid[y - 3] & shl_unchecked(sprite[0]) == 0
+                    {
+                        sprite[0] = shl_unchecked(sprite[0]);
+                        sprite[1] = shl_unchecked(sprite[1]);
+                        sprite[2] = shl_unchecked(sprite[2]);
+                        sprite[3] = shl_unchecked(sprite[3]);
                     }
-                    shl
                 }
                 '>' => {
-                    if DEBUG {
-                        println!("move right");
+                    // hits wall if rightmost bit is 1
+                    // * only need to check bottom 2 rows as that is where the max width is
+                    if sprite[2] & 1 == 0
+                        && sprite[3] & 1 == 0
+                        // check if hit rock
+                        && grid[y] & sprite[3] >> 1 == 0
+                        && grid[y - 1] & sprite[2] >> 1 == 0
+                        && grid[y - 2] & sprite[1] >> 1 == 0
+                        && grid[y - 3] & sprite[0] >> 1 == 0
+                    {
+                        sprite[0] >>= 1;
+                        sprite[1] >>= 1;
+                        sprite[2] >>= 1;
+                        sprite[3] >>= 1;
                     }
-                    shr
                 }
                 _ => panic!(),
-            };
-            let mut new_sprite = sprite.clone();
-            let mut hit_wall = false;
-            for i in 0..4 {
-                match shfn(sprite[i]) {
-                    Some(line) => {
-                        new_sprite[i] = line;
-                        let prev = grid[y - (4 - i - 1)] | sprite[i];
-                        let shifted = grid[y - (4 - i - 1)] | line;
-                        if shifted.count_ones() != prev.count_ones() {
-                            hit_wall = true;
-                            break;
-                        }
-                    }
-                    None => {
-                        hit_wall = true;
-                        break;
-                    }
-                }
             }
 
-            if !hit_wall {
-                if DEBUG {
-                    println!("success");
-                }
-                sprite = new_sprite;
-            }
-            if DEBUG {
-                draw(&grid, sprite, y);
-
-                println!("move down");
-            }
+            // check for if rock settles here
             if y == grid.len() - 1 || (sprite[3] & grid[y + 1] != 0 || sprite[2] & grid[y] != 0) {
-                // put sprite in grid
-                for i in 0..4 {
-                    grid[y - (4 - i - 1)] |= sprite[i];
-                }
+                grid[y - 3] |= sprite[0];
+                grid[y - 2] |= sprite[1];
+                grid[y - 1] |= sprite[2];
+                grid[y] |= sprite[3];
                 highest = highest.max(grid.len() - y - 1 + rock.0);
-                if DEBUG {
-                    println!("came to a rest; highest={highest}");
-                    draw(&grid, [0; 4], y);
-                }
                 break;
             }
+
             y += 1;
-            if DEBUG {
-                draw(&grid, sprite, y);
-            }
         }
     }
-    Ok(highest)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u64> {
@@ -134,12 +126,7 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
 
         let rock = rocks[num_rocks % 5];
         num_rocks += 1;
-        if num_rocks % 10_000_000 == 0 {
-            println!(
-                "rocks={num_rocks} ({:.5}%)",
-                num_rocks as f64 / ROCKS as f64
-            );
-        }
+
         let mut sprite = rock.1;
         let mut y = grid.len() - 1 - highest - BOT_GAP;
 
@@ -213,6 +200,7 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
     let mut grid_heights = HashMap::new();
     loop {
         if num_rocks == ROCKS {
+            // println!("{}", grid_heights.get(&2022).unwrap());
             panic!("did not find answer");
         }
         grid_heights.insert(num_rocks, highest);
@@ -224,9 +212,21 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
             if offset_rocks.is_none() {
                 panic!("did not find offset");
             }
-            let pattern_rocks = num_rocks;
+            let pattern_rocks = num_rocks - offset_rocks.unwrap();
+
+            // 583090379
+            // 583090378
+            // 583090377
+            // 583090378
+            // 447 + ((1000000000000-285)/1715 * 2574) + 2202
+            // offset -> pattern = 2000
+            // pattern1 -> pattern2 = 1715
+            // pattern2 -> pattern3 = 1715
 
             // 1287000000894 - too low
+            // 1500874636011 - too high
+            // 1500874635594
+
             println!("pattern_height={pattern_length}");
             println!("pattern_length_rocks={pattern_rocks}");
             println!("offset_height={offset}");
@@ -235,11 +235,15 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
             // sample
             // got:  1060000000050
             // want: 1514285714288
+            //       1500874635621
+            //       1500874636034
 
             const TOTAL_ROCKS: u64 = 1000000000000;
             let rocks = TOTAL_ROCKS - offset_rocks.unwrap() as u64;
             let pattern_repeat_count = rocks / pattern_rocks as u64;
-            let leftover = *grid_heights.get(&pattern_rocks).unwrap() as u64;
+            let remaining = rocks % pattern_rocks as u64 + offset_rocks.unwrap() as u64;
+            let leftover = *grid_heights.get(&(remaining as usize)).unwrap() as u64 - offset as u64;
+            println!("remaining = {} leftover = {}", remaining, leftover);
             break Ok(offset as u64 + pattern_length as u64 * pattern_repeat_count + leftover);
         }
 
@@ -319,8 +323,8 @@ fn find_pattern(grid: &[u8]) -> (usize, usize) {
             // println!("top:");
             // draw_grid(&top);
             if bot == top && bot == toptop {
-                // println!("found pattern of length {pattern_length} @ {offset}");
-                draw_grid(&bot);
+                println!("found pattern of length {pattern_length} @ {offset}");
+                // draw_grid(&bot);
                 return (pattern_length, offset);
             }
         }
@@ -454,7 +458,7 @@ mod tests {
     #[test]
     fn test_part_two_sample() {
         let ans = part02(SAMPLE).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1514285714288, ans);
     }
 
     #[test]
