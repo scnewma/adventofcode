@@ -1,40 +1,61 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
 use nom::{bytes::complete::tag, character::complete, sequence::preceded, Finish, IResult};
+use rayon::prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::SolveInfo;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
-        part01: part01(input)?.to_string(),
+        // part01: part01(input)?.to_string(),
+        part01: "IGNORED".to_string(),
         part02: part02(input)?.to_string(),
     })
 }
 
 pub fn part01(input: &str) -> anyhow::Result<u32> {
     let blueprints = parse_input(input)?;
-    for blueprint in blueprints {
-        let cracked = crack_geodes(
-            Resources {
-                time: 24,
-                ore_robots: 1,
-                ..Default::default()
-            },
-            &blueprint,
-            &mut HashMap::new(),
-        );
-        println!("{} = {cracked}", blueprint.id);
-    }
-    Ok(0)
+    Ok(blueprints
+        .par_iter()
+        .map(|bp| {
+            let cracked = crack_geodes(
+                Resources {
+                    time: 24,
+                    ore_robots: 1,
+                    ..Default::default()
+                },
+                &bp,
+                &mut HashMap::new(),
+            );
+            println!("{} = {cracked}", bp.id);
+            bp.id * cracked
+        })
+        .sum())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u32> {
-    Ok(0)
+    let blueprints = parse_input(input)?;
+    Ok(blueprints
+        .par_iter()
+        .take(3)
+        .map(|bp| {
+            println!("blueprint #{}", bp.id);
+            let cracked = crack_geodes(
+                Resources {
+                    time: 32,
+                    ore_robots: 1,
+                    ..Default::default()
+                },
+                &bp,
+                &mut HashMap::new(),
+            );
+            println!("{} = {cracked}", bp.id);
+            bp.id * cracked
+        })
+        .product())
 }
 
-fn crack_geodes(r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources, u32>) -> u32 {
-    // println!("t={} ore={} clay={} obsidian={} oreR={} clayR={} obsidianR={} geodeR={} cracked_geodes={cracked_geodes}", r.time, r.ore, r.clay, r.obsidian, r.ore_robots, r.clay_robots, r.obsidian_robots, r.geode_robots);
+fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources, u32>) -> u32 {
     if r.time == 0 {
         return 0;
     }
@@ -42,80 +63,75 @@ fn crack_geodes(r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources, u32
         return *cracked;
     }
 
-    // collect resources with current robots
-    // let mut next_resources = r.clone();
-    // next_resources.time -= 1;
-    let mut cracked_geodes = 0;
+    let original_resources = r.clone();
 
-    // options:
-    // * build 0..O ore robots
-    // * build 0..C clay robots (competes with ore robots)
-    // * build 0..B obsidian robots (competes with ore / clay)
-    // * build 0..G geode crackers (competes with ore / clay / geode)
+    let mut cracked = 0;
 
-    let buildable_ore_robots = r.ore / bp.ore;
-    // println!("buildable_ore_robots={buildable_ore_robots}");
-    for ore_robots_to_build in 0..=buildable_ore_robots {
-        let next_resources_ore = r.ore - ore_robots_to_build * bp.ore;
-        // next_resources.ore -= ore_robots_to_build * bp.ore;
+    r.time -= 1;
+    // simulate if we built a geode robot
+    if r.ore >= bp.geode.0 && r.obsidian >= bp.geode.1 {
+        let mut r = r.clone();
+        r.ore += r.ore_robots;
+        r.clay += r.clay_robots;
+        r.obsidian += r.obsidian_robots;
 
-        let buildable_clay_robots = next_resources_ore / bp.clay;
-        // println!("buildable_clay_robots={buildable_clay_robots}");
-        for clay_robots_to_build in 0..=buildable_clay_robots {
-            // println!("clay_robots_to_build={clay_robots_to_build}");
-            // next_resources.ore -= clay_robots_to_build * bp.clay;
-            let next_resources_ore = next_resources_ore - clay_robots_to_build * bp.clay;
-
-            let buildable_obsidian_robots =
-                (next_resources_ore / bp.obsidian.0).min(r.clay / bp.obsidian.1);
-            // println!("buildable_obsidian_robots={buildable_obsidian_robots}");
-            for obsidian_robots_to_build in 0..=buildable_obsidian_robots {
-                // next_resources.ore -= obsidian_robots_to_build * bp.obsidian.0;
-                // next_resources.clay -= obsidian_robots_to_build * bp.obsidian.1;
-                let next_resources_ore =
-                    next_resources_ore - obsidian_robots_to_build * bp.obsidian.0;
-                let next_resources_clay = r.clay - obsidian_robots_to_build * bp.obsidian.1;
-
-                let buildable_geode_robots =
-                    (next_resources_ore / bp.geode.0).min(r.obsidian / bp.geode.1);
-                // println!("buildable_geode_robots={buildable_geode_robots}");
-                for geode_robots_to_build in 0..=buildable_geode_robots {
-                    let next_resources_ore =
-                        next_resources_ore - geode_robots_to_build * bp.geode.0;
-                    let next_resources_obsidian = r.obsidian - geode_robots_to_build * bp.geode.1;
-                    // next_resources.ore -= geode_robots_to_build * bp.geode.0;
-                    // next_resources.obsidian -= geode_robots_to_build * bp.geode.1;
-
-                    // at the end of this minute, we will get resources from our robots, reflect
-                    // that for the next minute
-                    let next_resources = Resources {
-                        time: r.time - 1,
-                        ore: next_resources_ore + r.ore_robots,
-                        ore_robots: r.ore_robots + ore_robots_to_build,
-                        clay: next_resources_clay + r.clay_robots,
-                        clay_robots: r.clay_robots + clay_robots_to_build,
-                        obsidian: next_resources_obsidian + r.obsidian_robots,
-                        obsidian_robots: r.obsidian_robots + obsidian_robots_to_build,
-                        geode_robots: r.geode_robots + geode_robots_to_build,
-                    };
-
-                    let path_cracked_geodes = crack_geodes(next_resources, bp, cache);
-                    cracked_geodes = cracked_geodes.max(path_cracked_geodes);
-                }
-            }
-        }
+        r.ore -= bp.geode.0;
+        r.obsidian -= bp.geode.1;
+        r.geode_robots += 1;
+        cracked = cracked.max(crack_geodes(r, bp, cache));
     }
 
-    cracked_geodes += r.geode_robots;
+    // simulate if we built an obsidian robot
+    if r.ore >= bp.obsidian.0 && r.clay >= bp.obsidian.1 {
+        let mut r = r.clone();
+        r.ore += r.ore_robots;
+        r.clay += r.clay_robots;
+        r.obsidian += r.obsidian_robots;
 
-    // println!("CACHE PUT t={} ore={} clay={} obsidian={} oreR={} clayR={} obsidianR={} geodeR={} cracked_geodes={cracked_geodes}", r.time, r.ore, r.clay, r.obsidian, r.ore_robots, r.clay_robots, r.obsidian_robots, r.geode_robots);
-    cache.insert(r, cracked_geodes);
-    cracked_geodes
+        r.ore -= bp.obsidian.0;
+        r.clay -= bp.obsidian.1;
+        r.obsidian_robots += 1;
+        cracked = cracked.max(crack_geodes(r, bp, cache));
+    }
+
+    // simulate if we built an clay robot
+    if r.ore >= bp.clay {
+        let mut r = r.clone();
+        r.ore += r.ore_robots;
+        r.clay += r.clay_robots;
+        r.obsidian += r.obsidian_robots;
+
+        r.ore -= bp.clay;
+        r.clay_robots += 1;
+        cracked = cracked.max(crack_geodes(r, bp, cache));
+    }
+
+    // simulate if we built an ore robot
+    if r.ore >= bp.ore {
+        let mut r = r.clone();
+        r.ore += r.ore_robots;
+        r.clay += r.clay_robots;
+        r.obsidian += r.obsidian_robots;
+
+        r.ore -= bp.ore;
+        r.ore_robots += 1;
+        cracked = cracked.max(crack_geodes(r, bp, cache));
+    }
+
+    // simulate if you didn't build any robots
+    r.ore += r.ore_robots;
+    r.clay += r.clay_robots;
+    r.obsidian += r.obsidian_robots;
+    cracked = cracked.max(crack_geodes(r, bp, cache));
+
+    cracked += r.geode_robots;
+    cache.insert(original_resources, cracked);
+    cracked
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 struct Resources {
-    time: u32,
+    time: u8,
     ore: u32,
     ore_robots: u32,
     clay: u32,
@@ -178,13 +194,13 @@ mod tests {
     #[test]
     fn test_part_one_sample() {
         let ans = part01(SAMPLE).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(33, ans);
     }
 
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1766, ans);
     }
 
     #[test]
