@@ -50,7 +50,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                 &mut HashMap::new(),
             );
             println!("{} = {cracked}", bp.id);
-            bp.id * cracked
+            cracked
         })
         .product())
 }
