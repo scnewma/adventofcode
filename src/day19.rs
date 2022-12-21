@@ -7,9 +7,9 @@ use crate::SolveInfo;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
-        // part01: part01(input)?.to_string(),
-        part01: "IGNORED".to_string(),
-        part02: part02(input)?.to_string(),
+        part01: part01(input)?.to_string(),
+        part02: "IGNORED".to_string(),
+        // part02: part02(input)?.to_string(),
     })
 }
 
@@ -82,7 +82,8 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
     }
 
     // simulate if we built an obsidian robot
-    if r.ore >= bp.obsidian.0 && r.clay >= bp.obsidian.1 {
+    let need_obsidian_robots = r.obsidian_robots < bp.geode.1;
+    if r.ore >= bp.obsidian.0 && r.clay >= bp.obsidian.1 && need_obsidian_robots {
         let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
@@ -95,7 +96,8 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
     }
 
     // simulate if we built an clay robot
-    if r.ore >= bp.clay {
+    let need_clay_robots = r.clay_robots < bp.obsidian.1;
+    if r.ore >= bp.clay && need_clay_robots {
         let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
@@ -107,7 +109,8 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
     }
 
     // simulate if we built an ore robot
-    if r.ore >= bp.ore {
+    let need_ore_robots = r.ore_robots < bp.ore.max(bp.clay).max(bp.obsidian.0).max(bp.geode.0);
+    if r.ore >= bp.ore && need_ore_robots {
         let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
