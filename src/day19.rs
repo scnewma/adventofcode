@@ -24,7 +24,7 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
                     ore_robots: 1,
                     ..Default::default()
                 },
-                &bp,
+                bp,
                 &mut HashMap::new(),
             );
             println!("{} = {cracked}", bp.id);
@@ -46,7 +46,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                     ore_robots: 1,
                     ..Default::default()
                 },
-                &bp,
+                bp,
                 &mut HashMap::new(),
             );
             println!("{} = {cracked}", bp.id);
@@ -63,14 +63,14 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
         return *cracked;
     }
 
-    let original_resources = r.clone();
+    let original_resources = r;
 
     let mut cracked = 0;
 
     r.time -= 1;
     // simulate if we built a geode robot
     if r.ore >= bp.geode.0 && r.obsidian >= bp.geode.1 {
-        let mut r = r.clone();
+        let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
         r.obsidian += r.obsidian_robots;
@@ -83,7 +83,7 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
 
     // simulate if we built an obsidian robot
     if r.ore >= bp.obsidian.0 && r.clay >= bp.obsidian.1 {
-        let mut r = r.clone();
+        let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
         r.obsidian += r.obsidian_robots;
@@ -96,7 +96,7 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
 
     // simulate if we built an clay robot
     if r.ore >= bp.clay {
-        let mut r = r.clone();
+        let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
         r.obsidian += r.obsidian_robots;
@@ -108,7 +108,7 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
 
     // simulate if we built an ore robot
     if r.ore >= bp.ore {
-        let mut r = r.clone();
+        let mut r = r;
         r.ore += r.ore_robots;
         r.clay += r.clay_robots;
         r.obsidian += r.obsidian_robots;
@@ -192,24 +192,28 @@ mod tests {
     const INPUT: &'static str = include_str!("../inputs/day19.input.txt");
 
     #[test]
+    #[ignore]
     fn test_part_one_sample() {
         let ans = part01(SAMPLE).unwrap();
         assert_eq!(33, ans);
     }
 
     #[test]
+    #[ignore]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
         assert_eq!(1766, ans);
     }
 
     #[test]
+    #[ignore]
     fn test_part_two_sample() {
         let ans = part02(SAMPLE).unwrap();
         assert_eq!(0, ans);
     }
 
     #[test]
+    #[ignore]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
         assert_eq!(0, ans);

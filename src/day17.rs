@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::SolveInfo;
 use arrayvec::ArrayVec;
-use bittle::Bits;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
@@ -13,7 +12,6 @@ pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
 }
 
 const BOT_GAP: usize = 3;
-const DEBUG: bool = false;
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let input = input.trim_end();
@@ -205,7 +203,7 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
         }
         grid_heights.insert(num_rocks, highest);
 
-        if offset_rocks == None && &grid[grid.len() - offset..] == offset_pattern {
+        if offset_rocks.is_none() && &grid[grid.len() - offset..] == offset_pattern {
             offset_rocks = Some(num_rocks);
         }
         if &grid[grid.len() - pattern_length - offset..grid.len() - offset] == pattern {
@@ -367,75 +365,6 @@ fn shl_unchecked(line: u8) -> u8 {
     line << 1 & 0b01111111u8
 }
 
-fn shl(line: u8) -> Option<u8> {
-    let ones = line.count_ones();
-    // let next = (line << 1) ^ 0b10000000u8;
-    let next = (line << 1) & 0b01111111u8;
-    if ones == next.count_ones() {
-        Some(next)
-    } else {
-        None
-    }
-}
-
-fn shr(line: u8) -> Option<u8> {
-    let ones = line.count_ones();
-    let next = line >> 1;
-    if ones == next.count_ones() {
-        Some(next)
-    } else {
-        None
-    }
-}
-
-fn compress_str(input: &str) -> Vec<(char, u32)> {
-    let mut chars = input.chars().peekable();
-    let mut count = 0;
-    let mut rle = Vec::new();
-    while let Some(ch) = chars.next() {
-        count += 1;
-        if chars.peek() != Some(&ch) {
-            rle.push((ch, count));
-            count = 0;
-        }
-    }
-    rle
-}
-
-fn draw(grid: &[u8], sprite: [u8; 4], sprite_y: usize) {
-    for y in 0..grid.len() {
-        for x in (0..7).rev() {
-            let mut sprite_bit = false;
-            if (sprite_y - 3..=sprite_y).contains(&y) {
-                sprite_bit = sprite[3 - (sprite_y - y)].test_bit(x);
-            }
-            let cell = match (grid[y].test_bit(x), sprite_bit) {
-                (true, true) => panic!("both grid bit and sprite are set at ({x},{y})"),
-                (true, false) => "#",
-                (false, true) => "@",
-                _ => ".",
-            };
-            print!("{}", cell);
-        }
-        println!();
-    }
-    println!();
-}
-
-fn draw_grid(grid: &[u8]) {
-    for y in 0..grid.len() {
-        for x in (0..7).rev() {
-            let cell = match grid[y].test_bit(x) {
-                true => "#",
-                _ => ".",
-            };
-            print!("{}", cell);
-        }
-        println!();
-    }
-    println!();
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -465,13 +394,5 @@ mod tests {
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
         assert_eq!(1500874635587, ans);
-    }
-
-    #[test]
-    fn test_compress_str() {
-        assert_eq!(vec![('<', 1)], compress_str("<"));
-        assert_eq!(vec![('<', 1), ('>', 1)], compress_str("<>"));
-        assert_eq!(vec![('<', 2), ('>', 1)], compress_str("<<>"));
-        assert_eq!(vec![('<', 2), ('>', 1), ('<', 2)], compress_str("<<><<"));
     }
 }

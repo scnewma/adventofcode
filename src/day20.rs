@@ -63,8 +63,8 @@ fn grove_coordinates(file: Vec<isize>, rounds: usize) -> isize {
 }
 
 fn next_pos<V>(pos: usize, amt: isize, vec: &Vec<V>) -> usize {
-    let num_rotations = amt.abs() as usize % vec.len();
-    let next_pos = match amt.cmp(&0) {
+    let num_rotations = amt.unsigned_abs() % vec.len();
+    match amt.cmp(&0) {
         Ordering::Equal => pos,
         Ordering::Less => {
             if num_rotations > pos {
@@ -80,8 +80,7 @@ fn next_pos<V>(pos: usize, amt: isize, vec: &Vec<V>) -> usize {
                 pos + num_rotations
             }
         }
-    };
-    next_pos
+    }
 }
 
 #[cfg(test)]
