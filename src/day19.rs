@@ -8,8 +8,7 @@ use crate::SolveInfo;
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input)?.to_string(),
-        part02: "IGNORED".to_string(),
-        // part02: part02(input)?.to_string(),
+        part02: part02(input)?.to_string(),
     })
 }
 
@@ -26,6 +25,8 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
                 },
                 bp,
                 &mut HashMap::new(),
+                0,
+                &mut 0,
             );
             println!("{} = {cracked}", bp.id);
             bp.id * cracked
@@ -48,6 +49,8 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                 },
                 bp,
                 &mut HashMap::new(),
+                0,
+                &mut 0,
             );
             println!("{} = {cracked}", bp.id);
             cracked
@@ -55,7 +58,13 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         .product())
 }
 
-fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources, u32>) -> u32 {
+fn crack_geodes(
+    mut r: Resources,
+    bp: &Blueprint,
+    cache: &mut HashMap<Resources, u32>,
+    cracked: u32,
+    max_cracked: &mut u32,
+) -> u32 {
     if r.time == 0 {
         return 0;
     }
@@ -63,8 +72,20 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
         return *cracked;
     }
 
-    let original_resources = r;
+    // check if it's even possible to beat the maximum cracked geodes found so far
+    // this is a heuristic of what an ideal scenario would be where we could build a new robot
+    // every minute for the rest of the remaining minutes
+    let could_crack =
+        (r.time as u32 * (r.time as u32 + 1) / 2) + cracked + (r.geode_robots * r.time as u32);
+    if could_crack <= *max_cracked {
+        return 0;
+    }
 
+    let original_resources = r;
+    // we pass down the amount of geodes that have been cracked already so the next iteration of
+    // the simulation can determine if it's worthwhile for it to proceed (the above could_crack
+    // condition).
+    let cracked_this_turn = cracked + r.geode_robots;
     let mut cracked = 0;
 
     r.time -= 1;
@@ -78,7 +99,8 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
         r.ore -= bp.geode.0;
         r.obsidian -= bp.geode.1;
         r.geode_robots += 1;
-        cracked = cracked.max(crack_geodes(r, bp, cache));
+        cracked = cracked.max(crack_geodes(r, bp, cache, cracked_this_turn, max_cracked));
+        *max_cracked = (*max_cracked).max(cracked);
     }
 
     // simulate if we built an obsidian robot
@@ -92,7 +114,8 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
         r.ore -= bp.obsidian.0;
         r.clay -= bp.obsidian.1;
         r.obsidian_robots += 1;
-        cracked = cracked.max(crack_geodes(r, bp, cache));
+        cracked = cracked.max(crack_geodes(r, bp, cache, cracked_this_turn, max_cracked));
+        *max_cracked = (*max_cracked).max(cracked);
     }
 
     // simulate if we built an clay robot
@@ -105,7 +128,8 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
 
         r.ore -= bp.clay;
         r.clay_robots += 1;
-        cracked = cracked.max(crack_geodes(r, bp, cache));
+        cracked = cracked.max(crack_geodes(r, bp, cache, cracked_this_turn, max_cracked));
+        *max_cracked = (*max_cracked).max(cracked);
     }
 
     // simulate if we built an ore robot
@@ -118,14 +142,16 @@ fn crack_geodes(mut r: Resources, bp: &Blueprint, cache: &mut HashMap<Resources,
 
         r.ore -= bp.ore;
         r.ore_robots += 1;
-        cracked = cracked.max(crack_geodes(r, bp, cache));
+        cracked = cracked.max(crack_geodes(r, bp, cache, cracked_this_turn, max_cracked));
+        *max_cracked = (*max_cracked).max(cracked);
     }
 
     // simulate if you didn't build any robots
     r.ore += r.ore_robots;
     r.clay += r.clay_robots;
     r.obsidian += r.obsidian_robots;
-    cracked = cracked.max(crack_geodes(r, bp, cache));
+    cracked = cracked.max(crack_geodes(r, bp, cache, cracked_this_turn, max_cracked));
+    *max_cracked = (*max_cracked).max(cracked);
 
     cracked += r.geode_robots;
     cache.insert(original_resources, cracked);
@@ -195,30 +221,26 @@ mod tests {
     const INPUT: &'static str = include_str!("../inputs/day19.input.txt");
 
     #[test]
-    #[ignore]
     fn test_part_one_sample() {
         let ans = part01(SAMPLE).unwrap();
         assert_eq!(33, ans);
     }
 
     #[test]
-    #[ignore]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
         assert_eq!(1766, ans);
     }
 
     #[test]
-    #[ignore]
     fn test_part_two_sample() {
         let ans = part02(SAMPLE).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(3472, ans);
     }
 
     #[test]
-    #[ignore]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(30780, ans);
     }
 }
