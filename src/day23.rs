@@ -27,24 +27,30 @@ pub fn part02(input: &str) -> anyhow::Result<i64> {
 }
 
 struct Simulation {
-    elves: HashSet<(isize, isize)>,
+    elves: HashSet<(i32, i32)>,
     moves: [Move; 4],
+    // optimization to keep the same memory allocated instead of needing to request more every
+    // round
+    proposed: HashMap<(i32, i32), Vec<(i32, i32)>>,
 }
 
 impl Simulation {
-    fn new(elves: HashSet<(isize, isize)>) -> Simulation {
+    fn new(elves: HashSet<(i32, i32)>) -> Simulation {
+        let len = elves.len();
         Simulation {
             elves,
             moves: [Move::North, Move::South, Move::West, Move::East],
+            proposed: HashMap::with_capacity(len),
         }
     }
 
     fn simulate_round(&mut self) -> u32 {
+        self.proposed.clear();
+
         // propose moves
-        let mut proposed = HashMap::new();
         for elf in self.elves.iter() {
-            let neighbors = Neighbors::new(elf, &self.elves);
-            if neighbors.is_empty() {
+            let neighbors = neighbors(elf, &self.elves);
+            if neighbors.is_empty() || neighbors.is_full() {
                 // elf isn't going to move
                 continue;
             }
@@ -52,10 +58,7 @@ impl Simulation {
             for mve in self.moves.iter() {
                 if neighbors.is_open(mve) {
                     let propose = mve.update(elf);
-                    proposed
-                        .entry(propose)
-                        .and_modify(|e: &mut Vec<(isize, isize)>| (*e).push(*elf))
-                        .or_insert(vec![*elf]);
+                    self.proposed.entry(propose).or_insert(vec![]).push(*elf);
                     break;
                 }
             }
@@ -63,14 +66,14 @@ impl Simulation {
 
         // perform moves
         let mut elves_moved = 0;
-        for (newpos, elves_want) in proposed {
+        for (newpos, elves_want) in self.proposed.iter() {
             if elves_want.len() > 1 {
                 continue;
             }
             elves_moved += 1;
             // move elf from old position to new position
             self.elves.remove(&elves_want[0]);
-            self.elves.insert(newpos);
+            self.elves.insert(*newpos);
         }
 
         self.moves.rotate_left(1);
@@ -79,8 +82,8 @@ impl Simulation {
     }
 
     fn count_empty_ground(&self) -> usize {
-        let (mut minrow, mut maxrow) = (isize::max_value(), isize::min_value());
-        let (mut mincol, mut maxcol) = (isize::max_value(), isize::min_value());
+        let (mut minrow, mut maxrow) = (i32::max_value(), i32::min_value());
+        let (mut mincol, mut maxcol) = (i32::max_value(), i32::min_value());
         for pos in &self.elves {
             minrow = minrow.min(pos.0);
             maxrow = maxrow.max(pos.0);
@@ -92,89 +95,68 @@ impl Simulation {
     }
 }
 
-fn parse_input(input: &str) -> HashSet<(isize, isize)> {
+fn parse_input(input: &str) -> HashSet<(i32, i32)> {
     let mut elves = HashSet::new();
     for (r, line) in input.lines().enumerate() {
         for (c, ch) in line.chars().enumerate() {
             if ch == '#' {
-                elves.insert((r as isize, c as isize));
+                elves.insert((r as i32, c as i32));
             }
         }
     }
     elves
 }
 
-fn print_grid(grid: &HashSet<(isize, isize)>) {
-    let (mut minrow, mut maxrow) = (isize::max_value(), isize::min_value());
-    let (mut mincol, mut maxcol) = (isize::max_value(), isize::min_value());
-    for pos in grid {
-        minrow = minrow.min(pos.0);
-        maxrow = maxrow.max(pos.0);
-        mincol = mincol.min(pos.1);
-        maxcol = maxcol.max(pos.1);
-    }
-    for r in minrow..=maxrow {
-        for c in mincol..=maxcol {
-            let ch = if grid.contains(&(r, c)) { "#" } else { "." };
-            print!("{}", ch);
-        }
-        println!();
-    }
-}
+const DELTAS: [(i8, i8); 8] = [
+    (-1, -1), // NW
+    (-1, 0),  // N
+    (-1, 1),  // NE
+    (0, 1),   // E
+    (1, 1),   // SE
+    (1, 0),   // S
+    (1, -1),  // SW
+    (0, -1),  // W
+];
 
 // NW, N, NE, E, SE, S, SW, W
-#[derive(Debug)]
-struct Neighbors(u8);
-
-impl Neighbors {
-    fn new(pos: &(isize, isize), locations: &HashSet<(isize, isize)>) -> Neighbors {
-        let mut mask = 0;
-        let mut bit = 7;
-        for (dr, dc) in [
-            (-1, -1), // NW
-            (-1, 0),  // N
-            (-1, 1),  // NE
-            (0, 1),   // E
-            (1, 1),   // SE
-            (1, 0),   // S
-            (1, -1),  // SW
-            (0, -1),  // W
-        ] {
-            if locations.contains(&(pos.0 + dr, pos.1 + dc)) {
-                mask |= 1 << bit;
-            }
-            bit -= 1;
+#[inline]
+fn neighbors(pos: &(i32, i32), locations: &HashSet<(i32, i32)>) -> u8 {
+    let mut mask = 0;
+    let mut bit = 7;
+    for (dr, dc) in DELTAS {
+        if locations.contains(&(pos.0 + dr as i32, pos.1 + dc as i32)) {
+            mask |= 1 << bit;
         }
-        Neighbors(mask)
+        bit -= 1;
     }
+    mask
+}
 
+trait Neighbors {
+    fn is_empty(&self) -> bool;
+    fn is_full(&self) -> bool;
+    fn is_open(&self, m: &Move) -> bool;
+}
+
+impl Neighbors for u8 {
+    #[inline]
     fn is_empty(&self) -> bool {
-        self.0 == 0
+        *self == 0
     }
 
+    #[inline]
+    fn is_full(&self) -> bool {
+        *self == u8::max_value()
+    }
+
+    #[inline]
     fn is_open(&self, m: &Move) -> bool {
         match m {
-            Move::North => self.north_open(),
-            Move::South => self.south_open(),
-            Move::West => self.west_open(),
-            Move::East => self.east_open(),
+            Move::North => self & 0b11100000 == 0,
+            Move::South => self & 0b00001110 == 0,
+            Move::West => self & 0b10000011 == 0,
+            Move::East => self & 0b00111000 == 0,
         }
-    }
-
-    fn north_open(&self) -> bool {
-        self.0 & 0b11100000 == 0
-    }
-
-    fn south_open(&self) -> bool {
-        self.0 & 0b00001110 == 0
-    }
-
-    fn east_open(&self) -> bool {
-        self.0 & 0b00111000 == 0
-    }
-
-    fn west_open(&self) -> bool {
-        self.0 & 0b10000011 == 0
     }
 }
 
@@ -187,7 +169,7 @@ enum Move {
 }
 
 impl Move {
-    fn update(&self, pos: &(isize, isize)) -> (isize, isize) {
+    fn update(&self, pos: &(i32, i32)) -> (i32, i32) {
         match self {
             Move::North => (pos.0 - 1, pos.1),
             Move::South => (pos.0 + 1, pos.1),
