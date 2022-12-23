@@ -36,6 +36,7 @@ fn main() -> anyhow::Result<()> {
         day20::run,
         day21::run,
         day22::run,
+        day23::run,
         // GENERATE DAY FUNCTION
     ];
 
