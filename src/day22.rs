@@ -2,7 +2,6 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::SolveInfo;
 use anyhow::Context;
-use itertools::iproduct;
 
 pub fn run(input: &str, is_sample: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
@@ -49,7 +48,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     part02_inner(input, false)
 }
 
-fn part02_inner(input: &str, is_sample: bool) -> anyhow::Result<usize> {
+fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
     // TODO: I wrote the cube walking algorithm to be based on a specific pattern so that this
     // the input could be translated to it. at this point i'm just going to hardcode that
     // translation because i'm getting tired of working on this problem
@@ -393,15 +392,6 @@ impl Display for Grid {
             writeln!(f)?;
         }
         Ok(())
-    }
-}
-
-fn print_grid(data: &[Vec<Tile>]) {
-    for r in 0..data.len() {
-        for c in 0..data[0].len() {
-            print!("{}", data[r][c]);
-        }
-        println!();
     }
 }
 
@@ -772,5 +762,14 @@ mod tests {
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
         assert_eq!(0, ans);
+    }
+
+    fn print_grid(data: &[Vec<Tile>]) {
+        for r in 0..data.len() {
+            for c in 0..data[0].len() {
+                print!("{}", data[r][c]);
+            }
+            println!();
+        }
     }
 }
