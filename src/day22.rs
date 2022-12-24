@@ -48,6 +48,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     part02_inner(input, false)
 }
 
+// i'm not happy with this code anyway! :)
+#[allow(clippy::all)]
 fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
     // TODO: I wrote the cube walking algorithm to be based on a specific pattern so that this
     // the input could be translated to it. at this point i'm just going to hardcode that
@@ -589,16 +591,16 @@ fn transpose<T: Clone>(matrix: Vec<Vec<T>>) -> Vec<Vec<T>> {
 
 fn rotate<T: Clone>(matrix: Vec<Vec<T>>) -> Vec<Vec<T>> {
     let mut r = transpose(matrix);
-    for i in 0..r.len() {
-        r[i].reverse();
+    for col in &mut r {
+        col.reverse();
     }
     r
 }
 
 fn rotate_left<T: Clone>(matrix: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let mut r = matrix.clone();
-    for i in 0..r.len() {
-        r[i].reverse();
+    let mut r = matrix;
+    for col in &mut r {
+        col.reverse();
     }
     transpose(r)
 }

@@ -32,7 +32,6 @@ pub fn part02(input: &str) -> anyhow::Result<isize> {
     let monkeys: Vec<Monkey> =
         process_results(input.lines().map(Monkey::try_from), |it| it.collect())?;
     let mut monkeys_lookup: HashMap<String, Monkey> = monkeys
-        .clone()
         .into_iter()
         .map(|monkey| (monkey.name.clone(), monkey))
         .collect();
@@ -52,7 +51,7 @@ pub fn part02(input: &str) -> anyhow::Result<isize> {
                     // special case: root's new operation becomes "=" so we handle that here
                     if parent_name == "root" {
                         let other = if lhs == &current_monkey { rhs } else { lhs };
-                        (*m).job = Job::Lookup(other.to_string());
+                        m.job = Job::Lookup(other.to_string());
                         return;
                     }
                     // division and subtraction are not commutative so they need to be handled
@@ -83,10 +82,10 @@ pub fn part02(input: &str) -> anyhow::Result<isize> {
                     //   8
                     // 2 * ?   rhs = parent / lhs
                     if &current_monkey == rhs && (*op == Op::Div || *op == Op::Sub) {
-                        (*m).job = Job::Operation(lhs.to_string(), *op, parent_name.to_string());
+                        m.job = Job::Operation(lhs.to_string(), *op, parent_name.to_string());
                     } else {
                         let rhs = if lhs == &current_monkey { rhs } else { lhs };
-                        (*m).job =
+                        m.job =
                             Job::Operation(parent_name.to_string(), op.invert(), rhs.to_string());
                     }
                 } else {
@@ -109,17 +108,14 @@ pub fn part02(input: &str) -> anyhow::Result<isize> {
 fn evaluate_graph(monkeys: HashMap<String, Monkey>) -> anyhow::Result<HashMap<String, isize>> {
     let mut queue = VecDeque::new();
     let mut in_degree = HashMap::new();
-    let mut inedges = HashMap::new();
+    let mut inedges: HashMap<&String, Vec<&String>> = HashMap::new();
     for (_, monkey) in monkeys.iter() {
         let depends_on = monkey.depends_on();
 
         match depends_on {
             Some(deps) => {
                 for dep in deps {
-                    inedges
-                        .entry(dep)
-                        .and_modify(|v: &mut Vec<_>| v.push(&monkey.name))
-                        .or_insert(vec![&monkey.name]);
+                    inedges.entry(dep).or_default().push(&monkey.name);
                     in_degree
                         .entry(&monkey.name)
                         .and_modify(|cnt| *cnt += 1)
@@ -167,14 +163,11 @@ fn path_to_node(monkeys: &HashMap<String, Monkey>, node: &str) -> anyhow::Result
         }
 
         let monkey = monkeys.get(&monkey_name).context("monkey not found")?;
-        match monkey.depends_on() {
-            Some(deps) => {
-                let mut path = path.clone();
-                path.push(monkey_name);
-                stk.push((deps[0].clone(), path.clone()));
-                stk.push((deps[1].clone(), path.clone()));
-            }
-            None => (),
+        if let Some(deps) = monkey.depends_on() {
+            let mut path = path.clone();
+            path.push(monkey_name);
+            stk.push((deps[0].clone(), path.clone()));
+            stk.push((deps[1].clone(), path.clone()));
         }
     }
     Ok(path_to_node)

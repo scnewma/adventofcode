@@ -58,7 +58,7 @@ impl Simulation {
             for mve in self.moves.iter() {
                 if neighbors.is_open(mve) {
                     let propose = mve.update(elf);
-                    self.proposed.entry(propose).or_insert(vec![]).push(*elf);
+                    self.proposed.entry(propose).or_default().push(*elf);
                     break;
                 }
             }
