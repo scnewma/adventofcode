@@ -1,6 +1,6 @@
 use anyhow::Context;
 use itertools::process_results;
-use num::{bigint::ToBigUint, BigUint, Integer, Zero};
+use num::integer::Integer;
 use std::{cell::RefCell, cmp::Reverse, collections::VecDeque, str::FromStr};
 
 use crate::SolveInfo;
@@ -16,9 +16,7 @@ pub fn part01(input: &str) -> anyhow::Result<u64> {
     let monkeys: Vec<Monkey> =
         process_results(input.split("\n\n").map(Monkey::from_str), |it| it.collect())?;
 
-    simulate(20, monkeys, |current_worry| {
-        current_worry / 3.to_biguint().unwrap()
-    })
+    simulate(20, monkeys, |current_worry| current_worry / 3)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u64> {
@@ -28,18 +26,17 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
     let lcm = monkeys
         .iter()
         .map(|m| m.test)
-        .fold(1u32, |acc, n| acc.lcm(&n));
+        .fold(1u64, |acc, n| acc.lcm(&n));
 
     simulate(10000, monkeys, |current_worry| lcm + (current_worry % lcm))
 }
 
 fn simulate<F>(rounds: usize, monkeys: Vec<Monkey>, reduce_worry: F) -> anyhow::Result<u64>
 where
-    F: Fn(&BigUint) -> BigUint,
+    F: Fn(&u64) -> u64,
 {
     let monkeys: Vec<RefCell<Monkey>> = monkeys.into_iter().map(RefCell::new).collect();
     let mut inspected = vec![0; monkeys.len()];
-    let zero = Zero::zero();
 
     for _round in 0..rounds {
         for (i, monkey) in monkeys.iter().enumerate() {
@@ -52,7 +49,7 @@ where
                     Op::Square => item *= item.clone(),
                 }
                 item = reduce_worry(&item);
-                if &item % monkey.test == zero {
+                if &item % monkey.test == 0 {
                     monkeys[monkey.next.0].borrow_mut().items.push_back(item);
                 } else {
                     monkeys[monkey.next.1].borrow_mut().items.push_back(item);
@@ -66,10 +63,10 @@ where
 
 #[derive(Debug)]
 struct Monkey {
-    items: VecDeque<BigUint>,
+    items: VecDeque<u64>,
     op: Op,
     // tests if divisible by
-    test: u32,
+    test: u64,
     // indicies to throw to next for (true, false)
     next: (usize, usize),
 }
@@ -78,9 +75,9 @@ impl FromStr for Monkey {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut items: Option<VecDeque<BigUint>> = None;
+        let mut items: Option<VecDeque<u64>> = None;
         let mut op: Option<Op> = None;
-        let mut test: Option<u32> = None;
+        let mut test: Option<u64> = None;
         let mut if_true: Option<usize> = None;
         let mut if_false: Option<usize> = None;
 
@@ -90,7 +87,7 @@ impl FromStr for Monkey {
             match desc.trim_start() {
                 "Starting items" => {
                     items = Some(process_results(
-                        data.split(", ").map(BigUint::from_str),
+                        data.split(", ").map(u64::from_str),
                         |it| it.collect(),
                     )?);
                 }
@@ -143,8 +140,8 @@ impl FromStr for Monkey {
 
 #[derive(Debug)]
 enum Op {
-    Add(u32),
-    Mult(u32),
+    Add(u64),
+    Mult(u64),
     Square,
 }
 
