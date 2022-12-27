@@ -32,3 +32,8 @@ arrayvec = "0.7.2"
 bittle = "0.4.3"
 partitions = "0.2.4"
 rayon = "1.6.1"
+
+# we need tests to run fast like the release build since a lot of these
+# problems are very slow otherwise
+[profile.test]
+opt-level = 3
