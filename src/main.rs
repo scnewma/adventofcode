@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use anyhow::Context;
 use clap::Parser;
 
@@ -47,16 +49,18 @@ fn main() -> anyhow::Result<()> {
             anyhow::bail!("Day {} not yet solved!", day)
         }
 
+        let start = Instant::now();
         let input = day_input(day, cli.sample)?;
         let f = days[day - 1];
         let solve = f(&input, cli.sample)?;
-        print_solve(day, &solve);
+        print_solve(day, &solve, start.elapsed());
     } else {
         for (day, f) in days.iter().enumerate() {
+            let start = Instant::now();
             let day = day + 1;
             let input = day_input(day, cli.sample)?;
             let solve = f(&input, cli.sample)?;
-            print_solve(day, &solve);
+            print_solve(day, &solve, start.elapsed());
             println!();
         }
     }
@@ -73,8 +77,8 @@ fn day_input(day: usize, sample: bool) -> anyhow::Result<String> {
     std::fs::read_to_string(&fname).with_context(|| format!("Reading file {}", fname))
 }
 
-fn print_solve(day: usize, solve: &SolveInfo) {
-    println!("--- Day {:02} ---", day);
+fn print_solve(day: usize, solve: &SolveInfo, duration: Duration) {
+    println!("--- Day {:02} ({:?}) ---", day, duration);
     println!("  Part 1: {}", solve.part01);
     println!("  Part 2: {}", solve.part02);
 }
