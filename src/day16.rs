@@ -1,7 +1,7 @@
-use arrayvec::ArrayVec;
 use bittle::{Bits, BitsMut};
 use itertools::Itertools;
-use std::collections::HashMap;
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use std::collections::{HashMap, VecDeque};
 
 use nom::{
     branch::alt,
@@ -14,246 +14,177 @@ use nom::{
 
 use crate::SolveInfo;
 
-pub fn run(input: &str, is_sample: bool) -> anyhow::Result<SolveInfo> {
-    if is_sample {
-        Ok(SolveInfo {
-            part01: part01(input)?.to_string(),
-            part02: part02_inner::<10>(input)?.to_string(),
-        })
-    } else {
-        Ok(SolveInfo {
-            part01: part01(input)?.to_string(),
-            part02: part02_inner::<55>(input)?.to_string(),
-        })
-    }
+pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
+    Ok(SolveInfo {
+        part01: part01(input)?.to_string(),
+        part02: part02(input)?.to_string(),
+    })
 }
 
-pub fn part01(input: &str) -> anyhow::Result<u64> {
-    let lines: Vec<_> = input.lines().map(|l| parse_valve(l).unwrap().1).collect();
-    let mut flow_rates = HashMap::new();
-    let mut edges = HashMap::new();
-    let valve_bit_indicies: HashMap<String, u32> = lines
-        .iter()
-        .map(|(v, _)| v.name.clone())
-        .enumerate()
-        .map(|(i, v)| (v, i as u32))
-        .collect();
-    for (valve, neighs) in lines {
-        let ns: Vec<u32> = neighs
-            .iter()
-            .map(|name| *valve_bit_indicies.get(name).unwrap())
-            .collect();
-
-        edges.insert(*valve_bit_indicies.get(&valve.name).unwrap(), ns);
-        flow_rates.insert(
-            *valve_bit_indicies.get(&valve.name).unwrap(),
-            valve.flow_rate,
-        );
-    }
+pub fn part01(input: &str) -> anyhow::Result<u16> {
+    let (collapsed_edges, flow_rates, aa_index) = parse_input(input);
 
     Ok(max_relief(
-        0,
-        *valve_bit_indicies.get(&"AA".to_string()).unwrap(),
+        30,
+        aa_index,
         &mut HashMap::new(),
-        &edges,
+        &collapsed_edges,
         &flow_rates,
         States(0),
     ))
 }
 
-const MAX_NEIGHBORS: usize = 5;
+fn part02(input: &str) -> anyhow::Result<u16> {
+    let (collapsed_edges, flow_rates, aa_index) = parse_input(input);
 
-pub fn part02(input: &str) -> anyhow::Result<u64> {
-    part02_inner::<55>(input)
+    // inspired by hyper neutrino
+    // instead of trying to manage two actors at once, you can utilize the exact same code as in
+    // part 1 and use the state as a mask for the valves a given actor is not allowed to open.
+    let mask = u16::max_value();
+    Ok((0..mask / 2)
+        .into_iter()
+        .into_par_iter()
+        .map(|state| {
+            let mut cache = HashMap::new();
+            let me = max_relief(
+                26,
+                aa_index,
+                &mut cache,
+                &collapsed_edges,
+                &flow_rates,
+                States(state),
+            );
+            let elephant = max_relief(
+                26,
+                aa_index,
+                &mut cache,
+                &collapsed_edges,
+                &flow_rates,
+                States(mask ^ state),
+            );
+            me + elephant
+        })
+        .max()
+        .unwrap())
 }
-
-fn part02_inner<const VALVES: usize>(input: &str) -> anyhow::Result<u64> {
-    let lines: Vec<_> = input.lines().map(|l| parse_valve(l).unwrap().1).collect();
-    let mut flow_rates = vec![0; lines.len()];
-    let mut edges: ArrayVec<ArrayVec<_, MAX_NEIGHBORS>, VALVES> = ArrayVec::new();
-    (0..lines.len()).for_each(|_| edges.push(ArrayVec::new()));
-    let valve_bit_indicies: HashMap<String, u32> = lines
-        .iter()
-        .map(|(v, _)| v.name.clone())
-        .enumerate()
-        .map(|(i, v)| (v, i as u32))
-        .collect();
-    for (valve, neighs) in lines {
-        let ns: ArrayVec<u32, MAX_NEIGHBORS> = neighs
-            .iter()
-            .map(|name| *valve_bit_indicies.get(name).unwrap())
-            .collect();
-
-        edges[*valve_bit_indicies.get(&valve.name).unwrap() as usize] = ns;
-        flow_rates[*valve_bit_indicies.get(&valve.name).unwrap() as usize] = valve.flow_rate;
-    }
-
-    let pos_aa = *valve_bit_indicies.get(&"AA".to_string()).unwrap();
-
-    Ok(max_relief_with_elephant(
-        0,
-        (pos_aa, pos_aa),
-        &mut HashMap::new(),
-        &edges,
-        &flow_rates,
-        States(0),
-    ))
-}
-
-const TOTAL_TIME: u32 = 30;
 
 fn max_relief(
-    time: u32,
-    current_valve: u32,
-    cache: &mut HashMap<(u32, u32, States), u64>,
-    edges: &HashMap<u32, Vec<u32>>,
-    flow_rates: &HashMap<u32, u32>,
+    time: u16,
+    current_valve: u16,
+    cache: &mut HashMap<(u16, u16, States), u16>,
+    edges: &HashMap<u16, Vec<(u16, u16)>>,
+    flow_rates: &HashMap<u16, u16>,
     states: States,
-) -> u64 {
-    if time == TOTAL_TIME {
-        return 0;
-    }
+) -> u16 {
     if let Some(relief) = cache.get(&(current_valve, time, states)) {
         return *relief;
     }
 
     let mut relief = 0;
 
-    // if this valve is open, fork the simulation to add another path where this valve is open
-    // we also don't need to go down this path if the flow rate is 0 since it won't contribute
-    let current_valve_flow_rate = *flow_rates.get(&current_valve).unwrap();
-    if states.is_closed(current_valve) && current_valve_flow_rate > 0 {
-        let mut states = states;
-        states.open(current_valve);
-
-        let total_relief = ((TOTAL_TIME - time - 1) * current_valve_flow_rate) as u64
-            + max_relief(time + 1, current_valve, cache, edges, flow_rates, states);
-        relief = relief.max(total_relief);
-    }
-
     // we try all of the paths through the graph as if this valve were first not opened
-    for neighbor in edges.get(&current_valve).unwrap() {
-        relief = relief.max(max_relief(
-            time + 1,
-            *neighbor,
-            cache,
-            edges,
-            flow_rates,
-            states,
-        ));
+    for (neighbor, distance) in edges.get(&current_valve).unwrap() {
+        let time_rem = time.saturating_sub(*distance + 1);
+        if states.is_open(*neighbor) || time_rem == 0 {
+            continue;
+        }
+
+        let mut states = states;
+        states.open(*neighbor);
+        relief = relief.max(
+            time_rem * flow_rates[neighbor]
+                + max_relief(time_rem, *neighbor, cache, edges, flow_rates, states),
+        );
     }
 
     cache.insert((current_valve, time, states), relief);
     relief
 }
 
-const TOTAL_TIME_WITH_ELEPHANT: u32 = 26;
-
-fn max_relief_with_elephant(
-    time: u32,
-    current: (u32, u32),
-    cache: &mut HashMap<((u32, u32), u32, States), u64>,
-    edges: &[ArrayVec<u32, MAX_NEIGHBORS>],
-    flow_rates: &[u32],
-    states: States,
-) -> u64 {
-    if time == TOTAL_TIME_WITH_ELEPHANT {
-        return 0;
-    }
-    if let Some(relief) = cache.get(&(current, time, states)) {
-        return *relief;
-    }
-
-    let mut relief = 0;
-
-    let mut my_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
-    if states.is_closed(current.0) && flow_rates[current.0 as usize] > 0 {
-        my_options.push(Turn::Open(current.0));
-    }
-    if time < TOTAL_TIME_WITH_ELEPHANT - 1 {
-        for neighbor in &edges[current.0 as usize] {
-            my_options.push(Turn::Move(*neighbor));
-        }
-    }
-
-    let mut elephant_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
-    if states.is_closed(current.1) && flow_rates[current.1 as usize] > 0 {
-        elephant_options.push(Turn::Open(current.1));
-    }
-    if time < TOTAL_TIME_WITH_ELEPHANT - 1 {
-        for neighbor in &edges[current.1 as usize] {
-            elephant_options.push(Turn::Move(*neighbor));
-        }
-    }
-
-    for (my_move, elephant_move) in my_options.iter().cartesian_product(elephant_options.iter()) {
-        match (my_move, elephant_move) {
-            // invalid for both me and elephant to open the valve
-            (Turn::Open(v1), Turn::Open(v2)) if v1 == v2 => continue,
-            _ => (),
+fn distance(source: &String, dest: &String, edges: &HashMap<String, Vec<String>>) -> u16 {
+    let mut queue = VecDeque::new();
+    edges
+        .get(source)
+        .unwrap()
+        .iter()
+        .for_each(|v| queue.push_back((v, 1)));
+    while let Some((v, distance)) = queue.pop_front() {
+        if v == dest {
+            return distance;
         }
 
-        let mut next_pos = current;
-        let mut states = states;
-        let mut total_relief = 0;
-        match my_move {
-            Turn::Open(valve) => {
-                states.open(*valve);
-                total_relief +=
-                    ((TOTAL_TIME_WITH_ELEPHANT - time - 1) * flow_rates[current.0 as usize]) as u64;
-            }
-            Turn::Move(valve) => {
-                next_pos.0 = *valve;
-            }
-        }
-        match elephant_move {
-            Turn::Open(valve) => {
-                states.open(*valve);
-                total_relief +=
-                    ((TOTAL_TIME_WITH_ELEPHANT - time - 1) * flow_rates[current.1 as usize]) as u64;
-            }
-            Turn::Move(valve) => {
-                next_pos.1 = *valve;
-            }
-        }
-        total_relief +=
-            max_relief_with_elephant(time + 1, next_pos, cache, edges, flow_rates, states);
-
-        relief = relief.max(total_relief);
+        edges
+            .get(v)
+            .unwrap()
+            .iter()
+            .for_each(|u| queue.push_back((u, distance + 1)));
     }
-
-    cache.insert((current, time, states), relief);
-    relief
+    unreachable!("no path found between {} and {}", source, dest);
 }
 
-#[derive(Debug)]
-enum Turn {
-    Open(u32),
-    Move(u32),
-}
-
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Valve {
     name: String,
-    flow_rate: u32,
+    flow_rate: u16,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-struct States(u64);
+struct States(u16);
 
 impl States {
-    fn is_closed(&self, valve: u32) -> bool {
-        !self.0.test_bit(valve)
+    fn is_open(&self, valve: u16) -> bool {
+        self.0.test_bit(valve as u32)
     }
 
-    fn open(&mut self, valve: u32) {
-        self.0.set_bit(valve)
+    fn open(&mut self, valve: u16) {
+        self.0.set_bit(valve as u32)
     }
+}
+
+fn parse_input(input: &str) -> (HashMap<u16, Vec<(u16, u16)>>, HashMap<u16, u16>, u16) {
+    let lines: Vec<_> = input.lines().map(|l| parse_valve(l).unwrap().1).collect();
+    let valves: Vec<_> = lines
+        .iter()
+        .map(|(valve, _)| valve)
+        .cloned()
+        .filter(|v| v.flow_rate > 0 || v.name == "AA")
+        .collect();
+    // the open / close state of every valve is represented by a bitvec, this maps the name of each
+    // valve into it's assigned bitvec index
+    let valve_bit_indices: HashMap<String, u16> = valves
+        .iter()
+        .map(|v| v.name.clone())
+        .enumerate()
+        .map(|(i, v)| (v, i as u16))
+        .collect();
+    // valve -> [neighbor_valve]
+    let edges: HashMap<String, Vec<String>> =
+        lines.into_iter().map(|(v, ns)| (v.name, ns)).collect();
+    // most of the valves in the input have 0 flow so instead of working with all of the valves, we
+    // only work with the valves that have a flow rate > 0. this is a map between every single
+    // valve in the system along with the distance it takes to get to that valve.
+    // valve -> [(valve, distance), ...]
+    let mut collapsed_edges: HashMap<u16, Vec<(u16, u16)>> = HashMap::new();
+    valves.iter().permutations(2).for_each(|perms| {
+        collapsed_edges
+            .entry(valve_bit_indices[&perms[0].name])
+            .or_default()
+            .push((
+                valve_bit_indices[&perms[1].name],
+                distance(&perms[0].name, &perms[1].name, &edges),
+            ));
+    });
+    let flow_rates: HashMap<u16, u16> = valves
+        .iter()
+        .map(|v| (*valve_bit_indices.get(&v.name).unwrap(), v.flow_rate))
+        .collect();
+    let aa_index = *valve_bit_indices.get(&"AA".to_string()).unwrap();
+    (collapsed_edges, flow_rates, aa_index)
 }
 
 fn parse_valve(input: &str) -> IResult<&str, (Valve, Vec<String>)> {
     let (input, name) = preceded(tag("Valve "), parse_name)(input)?;
-    let (input, flow_rate) = preceded(tag(" has flow rate="), complete::u32)(input)?;
+    let (input, flow_rate) = preceded(tag(" has flow rate="), complete::u16)(input)?;
     let (input, _) = alt((
         tag("; tunnels lead to valves "),
         tag("; tunnel leads to valve "),
@@ -288,14 +219,14 @@ mod tests {
 
     #[test]
     fn test_part_two_sample() {
-        let ans = part02_inner::<10>(SAMPLE).unwrap();
+        let ans = part02(SAMPLE).unwrap();
         assert_eq!(1707, ans);
     }
 
     #[test]
     #[ignore]
     fn test_part_two() {
-        let ans = part02_inner::<55>(INPUT).unwrap();
+        let ans = part02(INPUT).unwrap();
         assert_eq!(3015, ans);
     }
 }
