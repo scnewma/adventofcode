@@ -57,7 +57,7 @@ pub fn part01(input: &str) -> anyhow::Result<u64> {
         &mut HashMap::new(),
         &edges,
         &flow_rates,
-        States(u64::max_value()),
+        States(0),
     ))
 }
 
@@ -96,7 +96,7 @@ fn part02_inner<const VALVES: usize>(input: &str) -> anyhow::Result<u64> {
         &mut HashMap::new(),
         &edges,
         &flow_rates,
-        States(u64::max_value()),
+        States(0),
     ))
 }
 
@@ -122,9 +122,9 @@ fn max_relief(
     // if this valve is open, fork the simulation to add another path where this valve is open
     // we also don't need to go down this path if the flow rate is 0 since it won't contribute
     let current_valve_flow_rate = *flow_rates.get(&current_valve).unwrap();
-    if states.is_open(current_valve) && current_valve_flow_rate > 0 {
+    if states.is_closed(current_valve) && current_valve_flow_rate > 0 {
         let mut states = states;
-        states.close(current_valve);
+        states.open(current_valve);
 
         let total_relief = ((TOTAL_TIME - time - 1) * current_valve_flow_rate) as u64
             + max_relief(time + 1, current_valve, cache, edges, flow_rates, states);
@@ -167,7 +167,7 @@ fn max_relief_with_elephant(
     let mut relief = 0;
 
     let mut my_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
-    if states.is_open(current.0) && flow_rates[current.0 as usize] > 0 {
+    if states.is_closed(current.0) && flow_rates[current.0 as usize] > 0 {
         my_options.push(Turn::Open(current.0));
     }
     if time < TOTAL_TIME_WITH_ELEPHANT - 1 {
@@ -177,7 +177,7 @@ fn max_relief_with_elephant(
     }
 
     let mut elephant_options: ArrayVec<_, { MAX_NEIGHBORS + 1 }> = ArrayVec::new();
-    if states.is_open(current.1) && flow_rates[current.1 as usize] > 0 {
+    if states.is_closed(current.1) && flow_rates[current.1 as usize] > 0 {
         elephant_options.push(Turn::Open(current.1));
     }
     if time < TOTAL_TIME_WITH_ELEPHANT - 1 {
@@ -198,7 +198,7 @@ fn max_relief_with_elephant(
         let mut total_relief = 0;
         match my_move {
             Turn::Open(valve) => {
-                states.close(*valve);
+                states.open(*valve);
                 total_relief +=
                     ((TOTAL_TIME_WITH_ELEPHANT - time - 1) * flow_rates[current.0 as usize]) as u64;
             }
@@ -208,7 +208,7 @@ fn max_relief_with_elephant(
         }
         match elephant_move {
             Turn::Open(valve) => {
-                states.close(*valve);
+                states.open(*valve);
                 total_relief +=
                     ((TOTAL_TIME_WITH_ELEPHANT - time - 1) * flow_rates[current.1 as usize]) as u64;
             }
@@ -242,12 +242,12 @@ struct Valve {
 struct States(u64);
 
 impl States {
-    fn is_open(&self, valve: u32) -> bool {
-        self.0.test_bit(valve)
+    fn is_closed(&self, valve: u32) -> bool {
+        !self.0.test_bit(valve)
     }
 
-    fn close(&mut self, valve: u32) {
-        self.0.clear_bit(valve)
+    fn open(&mut self, valve: u32) {
+        self.0.set_bit(valve)
     }
 }
 
