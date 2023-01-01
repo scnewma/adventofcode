@@ -46,10 +46,10 @@ where
                 match monkey.op {
                     Op::Add(i) => item += i,
                     Op::Mult(i) => item *= i,
-                    Op::Square => item *= item.clone(),
+                    Op::Square => item *= item,
                 }
                 item = reduce_worry(&item);
-                if &item % monkey.test == 0 {
+                if item % monkey.test == 0 {
                     monkeys[monkey.next.0].borrow_mut().items.push_back(item);
                 } else {
                     monkeys[monkey.next.1].borrow_mut().items.push_back(item);

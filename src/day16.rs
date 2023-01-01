@@ -145,6 +145,7 @@ impl BitAnd for States {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn parse_input(input: &str) -> (HashMap<u16, Vec<(u16, u16)>>, HashMap<u16, u16>, u16) {
     let lines: Vec<_> = input.lines().map(|l| parse_valve(l).unwrap().1).collect();
     let valves: Vec<_> = lines
