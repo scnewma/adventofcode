@@ -1,7 +1,9 @@
 use bittle::{Bits, BitsMut};
 use itertools::Itertools;
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    ops::BitAnd,
+};
 
 use nom::{
     branch::alt,
@@ -24,66 +26,58 @@ pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
 pub fn part01(input: &str) -> anyhow::Result<u16> {
     let (collapsed_edges, flow_rates, aa_index) = parse_input(input);
 
-    Ok(max_relief(
+    let mut observed = HashMap::new();
+    max_relief(
         30,
         aa_index,
-        &mut HashMap::new(),
+        0,
+        States(0),
         &collapsed_edges,
         &flow_rates,
-        States(0),
-    ))
+        &mut observed,
+    );
+    Ok(*observed.values().max().unwrap())
 }
 
 fn part02(input: &str) -> anyhow::Result<u16> {
     let (collapsed_edges, flow_rates, aa_index) = parse_input(input);
 
-    // inspired by hyper neutrino
-    // instead of trying to manage two actors at once, you can utilize the exact same code as in
-    // part 1 and use the state as a mask for the valves a given actor is not allowed to open.
-    let mask = u16::max_value();
-    Ok((0..mask / 2)
-        .into_iter()
-        .into_par_iter()
-        .map(|state| {
-            let mut cache = HashMap::new();
-            let me = max_relief(
-                26,
-                aa_index,
-                &mut cache,
-                &collapsed_edges,
-                &flow_rates,
-                States(state),
-            );
-            let elephant = max_relief(
-                26,
-                aa_index,
-                &mut cache,
-                &collapsed_edges,
-                &flow_rates,
-                States(mask ^ state),
-            );
-            me + elephant
-        })
+    let mut observed = HashMap::new();
+    max_relief(
+        26,
+        aa_index,
+        0,
+        States(0),
+        &collapsed_edges,
+        &flow_rates,
+        &mut observed,
+    );
+
+    // find the two highest paths that do not have overlapping states
+    Ok(observed
+        .iter()
+        .tuple_combinations::<(_, _)>()
+        .filter(|perms| *perms.0 .0 & *perms.1 .0 == 0)
+        .map(|perms| perms.0 .1 + perms.1 .1)
         .max()
         .unwrap())
 }
 
 fn max_relief(
     time: u16,
-    current_valve: u16,
-    cache: &mut HashMap<(u16, u16, States), u16>,
+    current: u16,
+    relief: u16,
+    states: States,
     edges: &HashMap<u16, Vec<(u16, u16)>>,
     flow_rates: &HashMap<u16, u16>,
-    states: States,
-) -> u16 {
-    if let Some(relief) = cache.get(&(current_valve, time, states)) {
-        return *relief;
-    }
+    observed: &mut HashMap<States, u16>,
+) {
+    observed
+        .entry(states)
+        .and_modify(|e| *e = (*e).max(relief))
+        .or_insert(relief);
 
-    let mut relief = 0;
-
-    // we try all of the paths through the graph as if this valve were first not opened
-    for (neighbor, distance) in edges.get(&current_valve).unwrap() {
+    for (neighbor, distance) in edges.get(&current).unwrap() {
         let time_rem = time.saturating_sub(*distance + 1);
         if states.is_open(*neighbor) || time_rem == 0 {
             continue;
@@ -91,14 +85,16 @@ fn max_relief(
 
         let mut states = states;
         states.open(*neighbor);
-        relief = relief.max(
-            time_rem * flow_rates[neighbor]
-                + max_relief(time_rem, *neighbor, cache, edges, flow_rates, states),
+        max_relief(
+            time_rem,
+            *neighbor,
+            relief + time_rem * flow_rates[neighbor],
+            states,
+            edges,
+            flow_rates,
+            observed,
         );
     }
-
-    cache.insert((current_valve, time, states), relief);
-    relief
 }
 
 fn distance(source: &String, dest: &String, edges: &HashMap<String, Vec<String>>) -> u16 {
@@ -138,6 +134,14 @@ impl States {
 
     fn open(&mut self, valve: u16) {
         self.0.set_bit(valve as u32)
+    }
+}
+
+impl BitAnd for States {
+    type Output = u16;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        self.0 & rhs.0
     }
 }
 
@@ -224,7 +228,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
         assert_eq!(3015, ans);
