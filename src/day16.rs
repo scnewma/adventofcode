@@ -39,7 +39,7 @@ pub fn part01(input: &str) -> anyhow::Result<u16> {
     Ok(*observed.values().max().unwrap())
 }
 
-fn part02(input: &str) -> anyhow::Result<u16> {
+pub fn part02(input: &str) -> anyhow::Result<u16> {
     let (collapsed_edges, flow_rates, aa_index) = parse_input(input);
 
     let mut observed = HashMap::new();

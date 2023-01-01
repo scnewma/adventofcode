@@ -12,15 +12,6 @@ pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {
     })
 }
 
-// INTERESTING: the state of the valley seems to repeat every 700 ticks, though we never seem to
-// get that close to the total number of valley states
-// let mut last = valley.clone();
-// for i in 1..=3811 {
-//     last = last.tick();
-//     if valley == last {
-//         println!("repeats @ {i}");
-//     }
-// }
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let (valley, entrance, exit) = parse_input(input);
     let h = valley.0.len();
@@ -34,11 +25,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     let start = (0, entrance);
     let end = (h - 1, exit);
     let (first_trip, valley) = shortest_path(valley, start, end);
-    dbg!(first_trip);
     let (second_trip, valley) = shortest_path(valley, end, start);
-    dbg!(second_trip);
     let (third_trip, _) = shortest_path(valley, start, end);
-    dbg!(third_trip);
     // + 1 for each "stop" otherwise you arrive and leave a destination in the same step
     Ok(first_trip + second_trip + 1 + third_trip + 1)
 }

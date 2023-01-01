@@ -28,7 +28,6 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
                 0,
                 &mut 0,
             );
-            println!("{} = {cracked}", bp.id);
             bp.id * cracked
         })
         .sum())
@@ -40,7 +39,6 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         .par_iter()
         .take(3)
         .map(|bp| {
-            println!("blueprint #{}", bp.id);
             let cracked = crack_geodes(
                 Resources {
                     time: 32,
@@ -52,7 +50,6 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                 0,
                 &mut 0,
             );
-            println!("{} = {cracked}", bp.id);
             cracked
         })
         .product())

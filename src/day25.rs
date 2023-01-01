@@ -3,7 +3,7 @@ use crate::SolveInfo;
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
     Ok(SolveInfo {
         part01: part01(input),
-        part02: "A Big Smoothie!".to_string(),
+        part02: part02(input),
     })
 }
 
@@ -13,6 +13,11 @@ pub fn part01(input: &str) -> String {
         .map(isize::from_snafu)
         .sum::<isize>()
         .to_snafu()
+}
+
+// only making this a standalone fn so that the generated benchmarks can assume it's here
+pub fn part02(_input: &str) -> String {
+    "A Big Smoothie!".to_string()
 }
 
 trait Snafu {

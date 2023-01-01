@@ -192,7 +192,6 @@ impl<'a> Simulation<'a> {
                 let top = &self.grid[(self.grid.len() - pattern_length * 2) - offset
                     ..self.grid.len() - pattern_length - offset];
                 if bot == top {
-                    // println!("found pattern of length {pattern_length} @ {offset}");
                     return (bot, &self.grid[self.grid.len() - offset..self.grid.len()]);
                 }
             }

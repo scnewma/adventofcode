@@ -16,7 +16,6 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     // this position is 0-based
     let mut pos = grid.start_pos();
     let mut direction = Direction::Right;
-    println!("starting at {:?}", pos);
 
     for mv in moves {
         match mv {
@@ -27,20 +26,16 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
                         None => break,
                     }
                 }
-                println!("walking {} steps {:?}, now at {:?}", n, direction, pos);
             }
             Move::TurnLeft => {
                 direction = direction.turn_left();
-                println!("turned left, now facing {:?}", direction);
             }
             Move::TurnRight => {
                 direction = direction.turn_right();
-                println!("turned right, now facing {:?}", direction);
             }
         }
     }
 
-    dbg!(pos);
     Ok((pos.0 + 1) * 1000 + (pos.1 + 1) * 4 + direction.facing())
 }
 
@@ -55,7 +50,6 @@ fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
     // the input could be translated to it. at this point i'm just going to hardcode that
     // translation because i'm getting tired of working on this problem
     let (grid, moves) = parse_input(input)?;
-    println!("{}", grid);
 
     // SAMPLE DATA
     // const SIZE: usize = 4;
@@ -204,12 +198,10 @@ fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
     let cube = Cube::<SIZE> { data };
     let mut pos = (0, SIZE);
     let mut direction = Direction::Right;
-    println!("starting at {:?}", pos);
 
     for mv in moves {
         match mv {
             Move::Walk(n) => {
-                println!("walking {} steps {:?}", n, direction);
                 for _ in 0..n {
                     match cube.walk(pos, direction) {
                         Some((next_pos, next_dir)) => {
@@ -219,18 +211,17 @@ fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
                         None => break,
                     }
                 }
-                println!("now at {:?}, facing {:?}", pos, direction);
             }
             Move::TurnLeft => {
                 direction = direction.turn_left();
-                println!("turned left, now facing {:?}", direction);
+                // println!("turned left, now facing {:?}", direction);
             }
             Move::TurnRight => {
                 direction = direction.turn_right();
-                println!("turned right, now facing {:?}", direction);
+                // println!("turned right, now facing {:?}", direction);
             }
         }
-        println!();
+        // println!();
     }
 
     // TODO: I also didn't implement any way to automatically move the standardized coordinate back
@@ -478,91 +469,74 @@ impl<const SIZE: usize> Cube<SIZE> {
         let mut next_dir = dir;
         // L->D (1-3)
         if col == 0 && row < SIZE && dir == Left {
-            println!("L->D");
             next_pos = (SIZE * 3 - 1 - row, SIZE);
             next_dir = Right;
 
         // D->L (1-3)
         } else if col == SIZE && row >= SIZE * 2 && row < SIZE * 3 && dir == Left {
-            println!("D->L");
             next_pos = (SIZE * 3 - 1 - row, 0);
             next_dir = Right;
 
         // R->D (2-4)
         } else if col == SIZE * 3 - 1 && row < SIZE && dir == Right {
-            println!("R->D");
             next_pos = (SIZE * 3 - 1 - row, SIZE * 2 - 1);
             next_dir = Left;
 
         // D->R (2-4)
         } else if col == SIZE * 2 - 1 && row >= SIZE * 2 && row < SIZE * 3 && dir == Right {
-            println!("D->R");
-            // next_pos = (SIZE * 3 - row, SIZE * 3 - 1);
             next_pos = (SIZE - 1 - (row - SIZE * 2), SIZE * 3 - 1);
             next_dir = Left;
 
         // L->F (1-7)
         } else if row == SIZE - 1 && col < SIZE && dir == Down {
-            println!("L->F");
             next_pos = (SIZE * 2 - 1 - col, SIZE);
             next_dir = Right;
 
         // F->L (1-7)
         } else if col == SIZE && row >= SIZE && row < SIZE * 2 && dir == Left {
-            println!("F->L");
             next_pos = (SIZE - 1, SIZE * 2 - 1 - row);
             next_dir = Up;
 
         // R->F (2-8)
         } else if row == SIZE - 1 && col >= SIZE * 2 && col < SIZE * 3 && dir == Down {
-            println!("R->F");
             next_pos = (col - SIZE, SIZE * 2 - 1);
             next_dir = Left;
 
         // F->R (2-8)
         } else if col == SIZE * 2 - 1 && row >= SIZE && row < SIZE * 2 && dir == Right {
-            println!("F->R");
-            // next_pos = (SIZE - 1, SIZE * 2 + SIZE * 2 - 1 - row);
             next_pos = (SIZE - 1, row + SIZE);
             next_dir = Up;
 
         // L->B (3-5)
         } else if row == 0 && col < SIZE && dir == Up {
-            println!("L->B");
             next_pos = (SIZE * 3 + col, SIZE);
             next_dir = Right;
 
         // B->L (3-5)
         } else if col == SIZE && row >= SIZE * 3 && row < SIZE * 4 && dir == Left {
-            println!("B->L");
             next_pos = (0, row - SIZE * 3);
             next_dir = Down;
 
         // R->B (4-6)
         } else if row == 0 && col >= SIZE * 2 && col < SIZE * 3 && dir == Up {
-            println!("R->B");
             next_pos = (SIZE * 4 - 1 - (col - SIZE * 2), SIZE * 2 - 1);
             next_dir = Left;
 
         // B->R (4-6)
         } else if col == SIZE * 2 - 1 && row >= SIZE * 3 && row < SIZE * 4 && dir == Right {
-            println!("B->R");
             next_pos = (0, SIZE * 3 - 1 - (row - SIZE * 3));
             next_dir = Down;
 
         // U->B (5-6)
         } else if row == 0 && col >= SIZE && col < SIZE * 2 && dir == Up {
-            println!("B->R");
             next_pos = (SIZE * 4 - 1, col);
             next_dir = Up;
 
         // B->U (5-6)
         } else if row == SIZE * 4 - 1 && col >= SIZE && col < SIZE * 2 && dir == Down {
-            println!("B->U");
             next_pos = (0, col);
             next_dir = Down;
         } else {
-            println!("{:?}", (row, col));
             match dir {
                 Right => next_pos = (row, col + 1),
                 Down => next_pos = (row + 1, col),
