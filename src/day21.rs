@@ -189,7 +189,6 @@ impl Monkey {
     }
 
     fn eval(&self, scope: &HashMap<String, isize>) -> anyhow::Result<isize> {
-        // println!("eval {}", self.name);
         match &self.job {
             Job::Number(n) => Ok(*n),
             Job::Lookup(other) => Ok(*scope.get(other).context("not found")?),

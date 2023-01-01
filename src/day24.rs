@@ -222,10 +222,10 @@ impl Blizzard for u8 {
 
     fn add_movement(&mut self, dir: Direction) {
         match dir {
-            Direction::Up => *self |= 1 << 1,
-            Direction::Down => *self |= 1 << 2,
-            Direction::Left => *self |= 1 << 3,
-            Direction::Right => *self |= 1,
+            Direction::Up => *self |= BZU,
+            Direction::Down => *self |= BZD,
+            Direction::Left => *self |= BZL,
+            Direction::Right => *self |= BZR,
         }
     }
 

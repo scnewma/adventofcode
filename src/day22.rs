@@ -212,16 +212,9 @@ fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
                     }
                 }
             }
-            Move::TurnLeft => {
-                direction = direction.turn_left();
-                // println!("turned left, now facing {:?}", direction);
-            }
-            Move::TurnRight => {
-                direction = direction.turn_right();
-                // println!("turned right, now facing {:?}", direction);
-            }
+            Move::TurnLeft => direction = direction.turn_left(),
+            Move::TurnRight => direction = direction.turn_right(),
         }
-        // println!();
     }
 
     // TODO: I also didn't implement any way to automatically move the standardized coordinate back
@@ -231,8 +224,6 @@ fn part02_inner(input: &str, _is_sample: bool) -> anyhow::Result<usize> {
 
     Ok((pos.0 + 1) * 1000 + (pos.1 + 1) * 4 + direction.facing())
 }
-
-// 185086 - too high
 
 fn parse_input(input: &str) -> anyhow::Result<(Grid, Vec<Move>)> {
     let (gridstr, movestr) = input.split_once("\n\n").context("malformed")?;

@@ -132,9 +132,9 @@ mod tests {
         assert_eq!("MCD", ans);
     }
 
-    // #[test]
-    // fn test_part_two() {
-    //     let ans = part02(INPUT);
-    //     assert_eq!("GSLCMFBRP", ans);
-    // }
+    #[test]
+    fn test_part_two() {
+        let ans = part02(INPUT);
+        assert_eq!("GSLCMFBRP", ans);
+    }
 }

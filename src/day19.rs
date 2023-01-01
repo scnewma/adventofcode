@@ -39,7 +39,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         .par_iter()
         .take(3)
         .map(|bp| {
-            let cracked = crack_geodes(
+            crack_geodes(
                 Resources {
                     time: 32,
                     ore_robots: 1,
@@ -49,8 +49,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
                 &mut HashMap::new(),
                 0,
                 &mut 0,
-            );
-            cracked
+            )
         })
         .product())
 }
