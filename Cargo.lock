@@ -73,6 +73,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
 
 [[package]]
+name = "aoc15"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arrayvec",
+ "bittle",
+ "clap 4.3.11",
+ "itertools",
+ "nom",
+ "num",
+ "rstest",
+ "take-until",
+]
+
+[[package]]
 name = "aoc22"
 version = "0.1.0"
 dependencies = [

@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "aoc22"
+    "aoc22",
+    "aoc15"
 ]
 
 # we need tests to run fast like the release build since a lot of these
