@@ -3,12 +3,12 @@ name = "aoc15"
 version = "0.1.0"
 edition = "2021"
 
-# [[bench]]
-# name = "bench"
-# harness = false
+[[bench]]
+name = "bench"
+harness = false
 
 [dev-dependencies]
-# criterion = "0.4"
+criterion = "0.4"
 rstest = "0.16.0"
 
 [dependencies]
@@ -20,3 +20,4 @@ num = "0.4"
 nom = "7.1.1"
 arrayvec = "0.7.2"
 bittle = "0.4.3"
+fxhash = "0.2.1"
