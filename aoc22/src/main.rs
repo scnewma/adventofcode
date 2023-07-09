@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use anyhow::Context;
 use clap::Parser;
 
-use adventofcode22::*;
+use aoc22::*;
 
 #[derive(Parser)]
 struct Cli {
@@ -70,9 +70,9 @@ fn main() -> anyhow::Result<()> {
 
 fn day_input(day: usize, sample: bool) -> anyhow::Result<String> {
     let fname = if sample {
-        format!("inputs/day{:02}.sample.txt", day)
+        format!("aoc22/inputs/day{:02}.sample.txt", day)
     } else {
-        format!("inputs/day{:02}.input.txt", day)
+        format!("aoc22/inputs/day{:02}.input.txt", day)
     };
     std::fs::read_to_string(&fname).with_context(|| format!("Reading file {}", fname))
 }

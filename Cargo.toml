@@ -1,37 +1,7 @@
-[package]
-name = "adventofcode22"
-version = "0.1.0"
-edition = "2021"
-default-run = "main"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[[bin]]
-name = "main"
-path = "src/main.rs"
-
-[[bin]]
-name = "gen"
-path = "src/bin/gen.rs"
-
-[[bench]]
-name = "bench"
-harness = false
-
-[dev-dependencies]
-criterion = "0.4"
-rstest = "0.16.0"
-
-[dependencies]
-anyhow = "1.0.66"
-clap = { version = "4.0.29", features = ["derive"] }
-itertools = "0.10.5"
-take-until = "0.1.0"
-num = "0.4"
-nom = "7.1.1"
-arrayvec = "0.7.2"
-bittle = "0.4.3"
-partitions = "0.2.4"
-rayon = "1.6.1"
+[workspace]
+members = [
+    "aoc22"
+]
 
 # we need tests to run fast like the release build since a lot of these
 # problems are very slow otherwise
