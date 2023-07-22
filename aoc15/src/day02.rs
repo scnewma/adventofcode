@@ -43,7 +43,7 @@ impl FromStr for Package {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut dimensions = s.splitn(3, "x").map(|s| u32::from_str(s).unwrap());
+        let mut dimensions = s.splitn(3, 'x').map(|s| u32::from_str(s).unwrap());
         Ok(Package(
             dimensions.next().unwrap(),
             dimensions.next().unwrap(),

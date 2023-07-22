@@ -20,10 +20,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 
 pub fn part02(input: &str) -> anyhow::Result<i64> {
     let mut sim = Simulation::new(parse_input(input));
-    Ok((1..)
-        .into_iter()
-        .find(|_round| sim.simulate_round() == 0)
-        .unwrap())
+    Ok((1..).find(|_round| sim.simulate_round() == 0).unwrap())
 }
 
 struct Simulation {

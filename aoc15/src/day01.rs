@@ -6,7 +6,7 @@ pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<i64> {
-    Ok(iter_floor_deltas(input).fold(0, |acc, delta| acc + delta))
+    Ok(iter_floor_deltas(input).sum())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<i64> {
