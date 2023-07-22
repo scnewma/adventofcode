@@ -9,20 +9,17 @@ pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> usize {
-    let mut buf = Default::default();
-    let mut hasher = Md5::new();
-    for i in 0.. {
-        hasher.update(input);
-        write!(&mut hasher, "{}", i).unwrap();
-        hasher.finalize_into_reset(&mut buf);
-        if buf[0] | buf[1] | (buf[2] >> 4) == 0 {
-            return i;
-        }
-    }
-    unreachable!("no solution found")
+    find_md5_seed_with_prefix(input, |buf| buf[0] | buf[1] | (buf[2] >> 4) == 0)
 }
 
 pub fn part02(input: &str) -> usize {
+    find_md5_seed_with_prefix(input, |buf| buf[0] | buf[1] | buf[2] == 0)
+}
+
+fn find_md5_seed_with_prefix<F>(input: &str, check_prefix: F) -> usize
+where
+    F: Fn(&[u8]) -> bool,
+{
     let mut buf = Default::default();
     let mut hasher = Md5::new();
     hasher.update(input);
@@ -30,7 +27,7 @@ pub fn part02(input: &str) -> usize {
         let mut hasher = hasher.clone();
         write!(&mut hasher, "{}", i).unwrap();
         hasher.finalize_into_reset(&mut buf);
-        if buf[0] | buf[1] | buf[2] == 0 {
+        if check_prefix(&buf) {
             return i;
         }
     }
