@@ -17,7 +17,7 @@ macro_rules! gen_benches {
     };
 }
 
-gen_benches![day01, day02, day03];
+gen_benches![day01, day02, day03, day04];
 
 criterion_group! {
     name = benches;
