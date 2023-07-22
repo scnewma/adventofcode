@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
         day02::run,
         day03::run,
         day04::run,
-        // day05::run,
+        day05::run,
         // day06::run,
         // day07::run,
         // day08::run,
