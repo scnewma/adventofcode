@@ -87,6 +87,8 @@ dependencies = [
  "nom",
  "num",
  "rstest",
+ "serde",
+ "serde_json",
  "take-until",
 ]
 

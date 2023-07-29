@@ -47,7 +47,7 @@ where
 
 fn path_distance(graph: &FxHashMap<(&str, &str), u32>, path: &[&str]) -> u32 {
     let mut d = 0;
-    let mut cities = path.into_iter();
+    let mut cities = path.iter();
     let mut prev = cities.next().unwrap();
     for city in cities {
         let cost = *graph
