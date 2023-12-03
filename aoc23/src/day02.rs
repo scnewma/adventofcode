@@ -33,7 +33,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         .map(|game| {
             game.hands
                 .into_iter()
-                .reduce(|acc, e| RGB(acc.0.max(e.0), acc.1.max(e.1), acc.2.max(e.2)))
+                .reduce(|acc, e| Rgb(acc.0.max(e.0), acc.1.max(e.1), acc.2.max(e.2)))
                 .unwrap()
         })
         .map(|hand| hand.0 * hand.1 * hand.2)
@@ -44,7 +44,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
 #[derive(Debug)]
 struct Game {
     id: u32,
-    hands: Vec<RGB>,
+    hands: Vec<Rgb>,
 }
 
 impl FromStr for Game {
@@ -63,10 +63,10 @@ impl FromStr for Game {
 
         let mut hands = Vec::new();
         for hand_info in game_info.split("; ") {
-            let mut rgb = RGB::default();
+            let mut rgb = Rgb::default();
             for cube_info in hand_info.split(", ") {
                 let (count, color) = cube_info
-                    .split_once(" ")
+                    .split_once(' ')
                     .context("expected cube count to be in format \"<count> <color>\"")?;
 
                 let count: u32 = count.parse().context("parsing cube count")?;
@@ -86,7 +86,7 @@ impl FromStr for Game {
 }
 
 #[derive(Debug, Default)]
-struct RGB(u32, u32, u32);
+struct Rgb(u32, u32, u32);
 
 #[cfg(test)]
 mod tests {

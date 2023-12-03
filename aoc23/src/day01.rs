@@ -10,14 +10,14 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
     for line in input.lines() {
         let first_digit = line
             .chars()
-            .find(|c| c.is_digit(10))
+            .find(|c| c.is_ascii_digit())
             .unwrap()
             .to_digit(10)
             .unwrap();
         let last_digit = line
             .chars()
             .rev()
-            .find(|c| c.is_digit(10))
+            .find(|c| c.is_ascii_digit())
             .unwrap()
             .to_digit(10)
             .unwrap();
@@ -31,7 +31,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
     for line in input.lines() {
         let mut digits = Vec::new();
         for (i, c) in line.char_indices() {
-            if c.is_digit(10) {
+            if c.is_ascii_digit() {
                 digits.push(c.to_digit(10).unwrap());
                 continue;
             }

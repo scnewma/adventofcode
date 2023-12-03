@@ -5,11 +5,11 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     })
 }
 
-pub fn part01(input: &str) -> anyhow::Result<i64> {
+pub fn part01(_input: &str) -> anyhow::Result<i64> {
     Ok(0)
 }
 
-pub fn part02(input: &str) -> anyhow::Result<i64> {
+pub fn part02(_input: &str) -> anyhow::Result<i64> {
     Ok(0)
 }
 
