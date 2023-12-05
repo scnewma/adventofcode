@@ -40,7 +40,7 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
             let mut lookup = src + j;
             for map in mappings.iter() {
                 for (dst, src, amt) in map {
-                    if *src <= lookup && lookup < *src + amt {
+                    if (*src..*src + amt).contains(&lookup) {
                         // this is the main mechanism to reduce work. calculate the the upper bound
                         // for inputs that would produce a linear result. you can safely skip the
                         // calculation for those inputs.
