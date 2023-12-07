@@ -159,8 +159,7 @@ fn best_hand(hand: &Hand) -> usize {
                 new_card!(hand.0[4]),
             ]);
 
-            let v = best_hand(&h);
-            best = best.max(v);
+            best = best.max(h.bucket());
         }
         best
     } else {
