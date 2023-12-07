@@ -1,6 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
-
-use itertools::Itertools;
+use std::str::FromStr;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -10,111 +8,86 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<u64> {
-    const NAMES: [&str; 7] = [
-        "five of a kind",
-        "four of a kind",
-        "full house",
-        "three of a kind",
-        "two pair",
-        "one pair",
-        "high card",
-    ];
     let mut buckets = vec![vec![]; 7];
 
-    for line in input.lines() {
-        let mut tokens = line.split_whitespace();
-        let hand = tokens.next().unwrap();
-        let bid: u64 = tokens.next().unwrap().parse().unwrap();
+    parse_input(input).for_each(|(raw, hand, bid)| {
+        buckets[hand.bucket()].push((raw, bid));
+    });
 
-        let freq = freq(hand);
-        match max_freq(&freq, hand) {
-            5 => buckets[6].push((hand, bid)),
-            4 => buckets[5].push((hand, bid)),
-            3 => {
-                if freq.values().contains(&2) {
-                    // full house
-                    buckets[4].push((hand, bid));
-                } else {
-                    // three of a kind
-                    buckets[3].push((hand, bid));
-                }
-            }
-            2 => {
-                if freq.values().filter(|n| **n == 2).count() == 2 {
-                    // two pair
-                    buckets[2].push((hand, bid));
-                } else {
-                    // one pair
-                    buckets[1].push((hand, bid));
-                }
-            }
-            1 => buckets[0].push((hand, bid)),
-            _ => unreachable!(),
-        }
-    }
-
-    let mut total_winnings = 0u64;
-    let mut rank = 1u64;
-    for bucket in &mut buckets {
-        bucket.sort_by(|(a, _), (b, _)| {
-            for (a, b) in a.chars().zip(b.chars()) {
-                let av = card_value(a);
-                let bv = card_value(b);
-                match av.cmp(&bv) {
-                    std::cmp::Ordering::Equal => continue,
-                    res => return res,
-                }
-            }
-            std::cmp::Ordering::Equal
-        });
-
-        for (_, bid) in bucket {
-            let winnings = *bid * rank;
-            total_winnings += winnings;
-            rank += 1;
-        }
-    }
-
-    Ok(total_winnings)
+    Ok(calculate_winnings(&mut buckets, card_value))
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u64> {
     let mut buckets = vec![vec![]; 7];
 
-    for line in input.lines() {
+    parse_input(input).for_each(|(raw, hand, bid)| {
+        let bucket = best_hand(&hand);
+        buckets[bucket].push((raw, bid));
+    });
+
+    Ok(calculate_winnings(&mut buckets, |card| match card {
+        'A' => 14,
+        'K' => 13,
+        'Q' => 12,
+        'J' => 1,
+        'T' => 10,
+        _ => card.to_digit(10).unwrap(),
+    }))
+}
+
+fn parse_input(input: &str) -> impl Iterator<Item = (&str, Hand, u64)> + '_ {
+    input.lines().map(|line| {
         let mut tokens = line.split_whitespace();
         let handstr = tokens.next().unwrap();
-        let hand: Hand = handstr.parse().unwrap();
         let bid: u64 = tokens.next().unwrap().parse().unwrap();
+        let hand: Hand = handstr.parse().unwrap();
+        (handstr, hand, bid)
+    })
+}
 
-        let bucket = best_hand(&hand);
-
-        buckets[bucket].push((handstr, bid));
-    }
+fn calculate_winnings<F>(buckets: &mut Vec<Vec<(&str, u64)>>, card_value: F) -> u64
+where
+    F: Fn(char) -> u32,
+{
+    use std::cmp::Ordering;
 
     let mut total_winnings = 0u64;
     let mut rank = 1u64;
-    for bucket in &mut buckets {
+    for bucket in buckets {
         bucket.sort_by(|(a, _), (b, _)| {
             for (a, b) in a.chars().zip(b.chars()) {
-                let av = card_value2(a);
-                let bv = card_value2(b);
-                match av.cmp(&bv) {
-                    std::cmp::Ordering::Equal => continue,
-                    res => return res,
+                let cmp = card_value(a).cmp(&card_value(b));
+                if cmp != Ordering::Equal {
+                    return cmp;
                 }
             }
-            std::cmp::Ordering::Equal
+            Ordering::Equal
         });
 
-        for (_, bid) in bucket {
+        for (_, bid) in bucket.iter() {
             let winnings = *bid * rank;
             total_winnings += winnings;
             rank += 1;
         }
     }
+    total_winnings
+}
 
-    Ok(total_winnings)
+struct Freq([u8; 15]);
+
+impl Freq {
+    fn max2(&self) -> (u8, u8) {
+        let (mut m1, mut m2) = (0, 0);
+        for f in self.0 {
+            if f > m1 {
+                m2 = m1;
+                m1 = f;
+            } else if f > m2 {
+                m2 = f;
+            }
+        }
+        (m1, m2)
+    }
 }
 
 #[derive(Clone)]
@@ -130,104 +103,53 @@ impl FromStr for Hand {
 }
 
 impl Hand {
-    fn has_joker(&self) -> bool {
-        self.0.iter().any(|c| *c == 'J')
-    }
-
-    fn next_joker(&self) -> usize {
+    fn next_joker(&self) -> Option<usize> {
         self.0
             .iter()
             .enumerate()
             .find(|(_, c)| **c == 'J')
             .map(|(i, _)| i)
-            .unwrap()
     }
 
-    fn freq(&self) -> HashMap<char, u32> {
-        let mut freq: HashMap<char, u32> = HashMap::new();
+    fn freq(&self) -> Freq {
+        let mut freq = [0; 15];
         for ch in self.0.iter() {
-            let e = freq.entry(*ch).or_default();
-            *e += 1;
+            freq[card_value(*ch) as usize] += 1;
         }
-        freq
-    }
-
-    fn max_freq(&self, freq: &HashMap<char, u32>) -> u32 {
-        *freq.values().max().unwrap()
+        Freq(freq)
     }
 
     fn bucket(&self) -> usize {
-        let freq = self.freq();
-        match self.max_freq(&freq) {
-            5 => 6,
-            4 => 5,
-            3 => {
-                if freq.values().contains(&2) {
-                    // full house
-                    4
-                } else {
-                    // three of a kind
-                    3
-                }
-            }
-            2 => {
-                if freq.values().filter(|n| **n == 2).count() == 2 {
-                    // two pair
-                    2
-                } else {
-                    // one pair
-                    1
-                }
-            }
-            1 => 0,
+        match self.freq().max2() {
+            (5, _) => 6,
+            (4, _) => 5,
+            (3, 2) => 4,
+            (3, _) => 3,
+            (2, 2) => 2,
+            (2, _) => 1,
+            (1, _) => 0,
             _ => unreachable!(),
         }
     }
 }
 
+// brute forces the replacement of all jokers for different cards to select the best possible hand.
 fn best_hand(hand: &Hand) -> usize {
-    if !hand.has_joker() {
-        return hand.bucket();
-    }
-
     const REPLACEMENTS: [char; 12] = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
-    let mut best = hand.bucket();
-    let i = hand.next_joker();
-    for r in REPLACEMENTS {
-        let mut h = hand.clone();
-        h.0[i] = r;
 
-        let v = best_hand(&h);
-        best = best.max(v);
-    }
-    best
-}
+    match hand.next_joker() {
+        Some(i) => {
+            let mut best = hand.bucket();
+            for r in REPLACEMENTS {
+                let mut h = hand.clone();
+                h.0[i] = r;
 
-fn hand_bucket(hand: &Hand) -> usize {
-    let freq = hand.freq();
-    match hand.max_freq(&freq) {
-        5 => 6,
-        4 => 5,
-        3 => {
-            if freq.values().contains(&2) {
-                // full house
-                4
-            } else {
-                // three of a kind
-                3
+                let v = best_hand(&h);
+                best = best.max(v);
             }
+            best
         }
-        2 => {
-            if freq.values().filter(|n| **n == 2).count() == 2 {
-                // two pair
-                2
-            } else {
-                // one pair
-                1
-            }
-        }
-        1 => 0,
-        _ => unreachable!(),
+        None => hand.bucket(),
     }
 }
 
@@ -242,35 +164,26 @@ fn card_value(card: char) -> u32 {
     }
 }
 
-fn card_value2(card: char) -> u32 {
-    match card {
-        'A' => 14,
-        'K' => 13,
-        'Q' => 12,
-        'J' => 1,
-        'T' => 10,
-        _ => card.to_digit(10).unwrap(),
-    }
-}
-
-fn freq(hand: &str) -> HashMap<char, u32> {
-    let mut freq: HashMap<char, u32> = HashMap::new();
-    for ch in hand.chars() {
-        let e = freq.entry(ch).or_default();
-        *e += 1;
-    }
-    freq
-}
-
-fn max_freq(freq: &HashMap<char, u32>, hand: &str) -> u32 {
-    *freq.values().max().unwrap()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     const INPUT: &'static str = include_str!("../inputs/day07.input.txt");
+
+    #[rstest]
+    #[case("AAAAA", 6)]
+    #[case("AAAA2", 5)]
+    #[case("AAA22", 4)]
+    #[case("A2A2A", 4)]
+    #[case("AAA21", 3)]
+    #[case("AA221", 2)]
+    #[case("AA321", 1)]
+    #[case("AQ321", 0)]
+    fn test_hand_bucket(#[case] h: &str, #[case] expected: usize) {
+        let hand = Hand::from_str(h).unwrap();
+        assert_eq!(expected, hand.bucket());
+    }
 
     #[test]
     fn test_part_one() {
