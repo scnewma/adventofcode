@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use itertools::Itertools;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -103,12 +105,8 @@ impl FromStr for Hand {
 }
 
 impl Hand {
-    fn next_joker(&self) -> Option<usize> {
-        self.0
-            .iter()
-            .enumerate()
-            .find(|(_, c)| **c == 'J')
-            .map(|(i, _)| i)
+    fn has_joker(&self) -> bool {
+        self.0.iter().contains(&'J')
     }
 
     fn freq(&self) -> Freq {
@@ -133,23 +131,40 @@ impl Hand {
     }
 }
 
-// brute forces the replacement of all jokers for different cards to select the best possible hand.
 fn best_hand(hand: &Hand) -> usize {
     const REPLACEMENTS: [char; 12] = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
-    match hand.next_joker() {
-        Some(i) => {
-            let mut best = hand.bucket();
-            for r in REPLACEMENTS {
-                let mut h = hand.clone();
-                h.0[i] = r;
-
-                let v = best_hand(&h);
-                best = best.max(v);
+    if hand.has_joker() {
+        let mut best = hand.bucket();
+        for r in REPLACEMENTS {
+            // new_card replaces jokers with the replacement card
+            macro_rules! new_card {
+                ( $card:expr) => {
+                    if $card == 'J' {
+                        r
+                    } else {
+                        $card
+                    }
+                };
             }
-            best
+
+            // replace all jokers in hand with the replacement card. it is always optimal to
+            // set all of the jokers to the same card. i.e. if you have a pair and 2 jokes then
+            // creating four of a kind is better than creating a full house.
+            let h = Hand([
+                new_card!(hand.0[0]),
+                new_card!(hand.0[1]),
+                new_card!(hand.0[2]),
+                new_card!(hand.0[3]),
+                new_card!(hand.0[4]),
+            ]);
+
+            let v = best_hand(&h);
+            best = best.max(v);
         }
-        None => hand.bucket(),
+        best
+    } else {
+        hand.bucket()
     }
 }
 
