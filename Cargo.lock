@@ -117,6 +117,7 @@ dependencies = [
  "anyhow",
  "clap 4.3.11",
  "criterion",
+ "fxhash",
  "itertools",
  "num",
  "rstest",

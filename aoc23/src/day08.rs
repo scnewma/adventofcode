@@ -1,5 +1,5 @@
+use fxhash::FxHashMap;
 use num::integer::Integer;
-use std::collections::HashMap;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -18,15 +18,15 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
 
     Ok(nodes
         .keys()
-        .filter(|n| n.chars().last().unwrap() == 'A')
+        .filter(|n| n.ends_with('A'))
         .cloned()
-        .map(|n| navigate(moves, &nodes, n, |node| node.chars().last().unwrap() == 'Z'))
+        .map(|n| navigate(moves, &nodes, n, |node| node.ends_with('Z')))
         .fold(1u64, |acc, n| acc.lcm(&n)))
 }
 
-fn parse_input(input: &str) -> (&str, HashMap<&str, (&str, &str)>) {
+fn parse_input(input: &str) -> (&str, FxHashMap<&str, (&str, &str)>) {
     let (moves, grid) = input.split_once("\n\n").unwrap();
-    let mut nodes = HashMap::new();
+    let mut nodes = FxHashMap::default();
     for line in grid.lines() {
         let (node, lr) = line.split_once(" = ").unwrap();
         let lr = &lr[1..lr.len() - 1]; // trim "(" ")"
@@ -36,7 +36,7 @@ fn parse_input(input: &str) -> (&str, HashMap<&str, (&str, &str)>) {
     (moves, nodes)
 }
 
-fn navigate<F>(moves: &str, nodes: &HashMap<&str, (&str, &str)>, start: &str, is_end: F) -> u64
+fn navigate<F>(moves: &str, nodes: &FxHashMap<&str, (&str, &str)>, start: &str, is_end: F) -> u64
 where
     F: Fn(&str) -> bool,
 {
@@ -44,11 +44,9 @@ where
     let mut current = start;
     let mut moves = moves.chars().cycle();
     while !is_end(current) {
-        let lr = nodes.get(current).unwrap();
-        let m = moves.next().unwrap();
-        current = match m {
-            'L' => lr.0,
-            'R' => lr.1,
+        current = match moves.next().unwrap() {
+            'L' => nodes[current].0,
+            'R' => nodes[current].1,
             _ => unreachable!(),
         };
         steps += 1;
@@ -71,6 +69,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(13_289_612_809_129, ans);
+        assert_eq!(13289612809129, ans);
     }
 }
