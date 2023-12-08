@@ -118,6 +118,7 @@ dependencies = [
  "clap 4.3.11",
  "criterion",
  "itertools",
+ "num",
  "rstest",
 ]
 

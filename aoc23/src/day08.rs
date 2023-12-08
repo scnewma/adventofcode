@@ -1,3 +1,6 @@
+use num::integer::Integer;
+use std::collections::HashMap;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -5,42 +8,69 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     })
 }
 
-pub fn part01(_input: &str) -> anyhow::Result<i64> {
-    Ok(0)
+pub fn part01(input: &str) -> anyhow::Result<u64> {
+    let (moves, nodes) = parse_input(input);
+    Ok(navigate(moves, &nodes, "AAA", |node| node == "ZZZ"))
 }
 
-pub fn part02(_input: &str) -> anyhow::Result<i64> {
-    Ok(0)
+pub fn part02(input: &str) -> anyhow::Result<u64> {
+    let (moves, nodes) = parse_input(input);
+
+    Ok(nodes
+        .keys()
+        .filter(|n| n.chars().last().unwrap() == 'A')
+        .cloned()
+        .map(|n| navigate(moves, &nodes, n, |node| node.chars().last().unwrap() == 'Z'))
+        .fold(1u64, |acc, n| acc.lcm(&n)))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+fn parse_input(input: &str) -> (&str, HashMap<&str, (&str, &str)>) {
+    let (moves, grid) = input.split_once("\n\n").unwrap();
+    let mut nodes = HashMap::new();
+    for line in grid.lines() {
+        let (node, lr) = line.split_once(" = ").unwrap();
+        let lr = &lr[1..lr.len() - 1]; // trim "(" ")"
+        let (l, r) = lr.split_once(", ").unwrap();
+        nodes.insert(node, (l, r));
+    }
+    (moves, nodes)
+}
 
-//     const SAMPLE: &'static str = include_str!("../inputs/day08.sample.txt");
-//     const INPUT: &'static str = include_str!("../inputs/day08.input.txt");
+fn navigate<F>(moves: &str, nodes: &HashMap<&str, (&str, &str)>, start: &str, is_end: F) -> u64
+where
+    F: Fn(&str) -> bool,
+{
+    let mut steps = 0;
+    let mut current = start;
+    let mut moves = moves.chars().cycle();
+    while !is_end(current) {
+        let lr = nodes.get(current).unwrap();
+        let m = moves.next().unwrap();
+        current = match m {
+            'L' => lr.0,
+            'R' => lr.1,
+            _ => unreachable!(),
+        };
+        steps += 1;
+    }
+    steps
+}
 
-//     #[test]
-//     fn test_part_one_sample() {
-//         let ans = part01(SAMPLE).unwrap();
-//         assert_eq!(24000, ans);
-//     }
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     #[test]
-//     fn test_part_one() {
-//         let ans = part01(INPUT).unwrap();
-//         assert_eq!(69501, ans);
-//     }
+    const INPUT: &'static str = include_str!("../inputs/day08.input.txt");
 
-//     #[test]
-//     fn test_part_two_sample() {
-//         let ans = part02(SAMPLE).unwrap();
-//         assert_eq!(45000, ans);
-//     }
+    #[test]
+    fn test_part_one() {
+        let ans = part01(INPUT).unwrap();
+        assert_eq!(20777, ans);
+    }
 
-//     #[test]
-//     fn test_part_two() {
-//         let ans = part02(INPUT).unwrap();
-//         assert_eq!(202346, ans);
-//     }
-// }
+    #[test]
+    fn test_part_two() {
+        let ans = part02(INPUT).unwrap();
+        assert_eq!(13_289_612_809_129, ans);
+    }
+}
