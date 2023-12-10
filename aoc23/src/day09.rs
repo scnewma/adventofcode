@@ -43,7 +43,7 @@ fn predict(nums: Vec<i64>, prediction: Prediction) -> i64 {
     while let Some(nums) = stk.pop() {
         match prediction {
             Prediction::Start => delta = nums.first().unwrap() - delta,
-            Prediction::End => delta = nums.last().unwrap() + delta,
+            Prediction::End => delta += nums.last().unwrap(),
         }
     }
     delta
