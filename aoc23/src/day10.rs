@@ -254,11 +254,8 @@ fn scale(
 
     // populate the 'S'
     for (dr, dc) in [(2, 0), (-2, 0), (0, 2), (0, -2)] {
-        match scaled.get(&(s_pos.0 + dr, s_pos.1 + dc)) {
-            Some('x') => {
-                scaled.insert((s_pos.0 + (dr / 2), s_pos.1 + (dc / 2)), 'x');
-            }
-            _ => (),
+        if let Some('x') = scaled.get(&(s_pos.0 + dr, s_pos.1 + dc)) {
+            scaled.insert((s_pos.0 + (dr / 2), s_pos.1 + (dc / 2)), 'x');
         }
     }
 
