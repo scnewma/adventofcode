@@ -115,11 +115,13 @@ name = "aoc23"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "arrayvec",
  "clap 4.3.11",
  "criterion",
  "fxhash",
  "itertools",
  "num",
+ "rayon",
  "rstest",
 ]
 
