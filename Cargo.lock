@@ -118,6 +118,7 @@ dependencies = [
  "arrayvec",
  "clap 4.3.11",
  "criterion",
+ "edit-distance",
  "fxhash",
  "itertools",
  "num",
@@ -404,6 +405,12 @@ dependencies = [
  "block-buffer",
  "crypto-common",
 ]
+
+[[package]]
+name = "edit-distance"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbbaaaf38131deb9ca518a274a45bfdb8771f139517b073b16c2d3d32ae5037b"
 
 [[package]]
 name = "either"
