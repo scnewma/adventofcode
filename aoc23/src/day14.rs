@@ -60,11 +60,22 @@ fn calculate_load(grid: &Vec<Vec<char>>) -> usize {
     total
 }
 
-fn spin_cycle(grid: &mut Vec<Vec<char>>) {
-    tilt_north(grid);
-    tilt_west(grid);
-    tilt_south(grid);
-    tilt_east(grid);
+fn spin_cycle(orig: &mut Vec<Vec<char>>) {
+    tilt_north(orig);
+
+    // tilt west
+    let mut grid = rotate(&orig);
+    tilt_north(&mut grid);
+
+    // tilt south
+    let mut grid = rotate(&grid);
+    tilt_north(&mut grid);
+
+    // tilt east
+    let mut grid = rotate(&grid);
+    tilt_north(&mut grid);
+
+    *orig = rotate(&grid);
 }
 
 fn tilt_north(grid: &mut Vec<Vec<char>>) {
@@ -87,22 +98,12 @@ fn tilt_north(grid: &mut Vec<Vec<char>>) {
     }
 }
 
-fn tilt_south(grid: &mut Vec<Vec<char>>) {
-    let mut tilted = rotate(&rotate(grid));
-    tilt_north(&mut tilted);
-    *grid = rotate(&rotate(&tilted));
-}
-
-fn tilt_east(grid: &mut Vec<Vec<char>>) {
-    let mut rotated = rotate_left(grid.clone());
-    tilt_north(&mut rotated);
-    *grid = rotate(&rotated);
-}
-
-fn tilt_west(grid: &mut Vec<Vec<char>>) {
-    let mut rotated = rotate(grid);
-    tilt_north(&mut rotated);
-    *grid = rotate_left(rotated);
+fn rotate<T: Clone>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>> {
+    let mut r = transpose(matrix);
+    for col in &mut r {
+        col.reverse();
+    }
+    r
 }
 
 fn transpose<T: Clone>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>> {
@@ -113,22 +114,6 @@ fn transpose<T: Clone>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>> {
         }
     }
     t
-}
-
-fn rotate<T: Clone>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let mut r = transpose(matrix);
-    for col in &mut r {
-        col.reverse();
-    }
-    r
-}
-
-fn rotate_left<T: Clone>(matrix: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let mut r = matrix;
-    for col in &mut r {
-        col.reverse();
-    }
-    transpose(&r)
 }
 
 #[cfg(test)]
