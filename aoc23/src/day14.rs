@@ -64,7 +64,7 @@ fn spin_cycle(orig: &mut Vec<Vec<char>>) {
     tilt_north(orig);
 
     // tilt west
-    let mut grid = rotate(&orig);
+    let mut grid = rotate(orig);
     tilt_north(&mut grid);
 
     // tilt south

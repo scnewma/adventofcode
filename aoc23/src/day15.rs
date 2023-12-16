@@ -21,10 +21,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 
                 bx.iter_mut()
                     .find(|(k, _)| *k == label)
-                    .and_then(|(_, val)| {
-                        *val = v;
-                        Some(())
-                    })
+                    .map(|(_, val)| *val = v)
                     .or_else(|| {
                         bx.push_back((label, v));
                         None
