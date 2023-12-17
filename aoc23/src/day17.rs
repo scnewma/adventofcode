@@ -16,11 +16,6 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
         .map(|line| line.chars().map(|c| c.to_digit(10).unwrap()).collect_vec())
         .collect_vec();
 
-    let mut min_heat_loss = u32::MAX;
-    let on_end = |state: &State| {
-        min_heat_loss = min_heat_loss.min(state.heat_loss);
-    };
-
     let get_neighbors = |state: &State| {
         let mut neighbors = vec![
             Direction::Up,
@@ -37,14 +32,12 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
         neighbors
     };
 
-    shortest_paths(
+    Ok(shortest_path(
         grid,
         vec![State::start(Direction::Right)],
         get_neighbors,
-        on_end,
-    );
-
-    Ok(min_heat_loss)
+        |_| true,
+    ))
 }
 
 pub fn part02(input: &str) -> anyhow::Result<u32> {
@@ -52,17 +45,6 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         .lines()
         .map(|line| line.chars().map(|c| c.to_digit(10).unwrap()).collect_vec())
         .collect_vec();
-
-    let mut min_heat_loss = u32::MAX;
-    let on_end = |state: &State| {
-        // must have moved in the same direction for at least four blocks to be considered
-        // valid
-        if state.run_len < 4 {
-            return;
-        }
-
-        min_heat_loss = min_heat_loss.min(state.heat_loss);
-    };
 
     let get_neighbors = |state: &State| {
         if state.run_len < 4 {
@@ -87,25 +69,25 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
         }
     };
 
-    shortest_paths(
+    Ok(shortest_path(
         grid,
         vec![
             State::start(Direction::Right),
             State::start(Direction::Down),
         ],
         get_neighbors,
-        on_end,
-    );
-
-    Ok(min_heat_loss)
+        // must have moved in the same direction for at least four blocks to be considered
+        // valid
+        |state| state.run_len >= 4 && state.run_len <= 10,
+    ))
 }
 
-fn shortest_paths(
+fn shortest_path(
     grid: Vec<Vec<u32>>,
     starts: Vec<State>,
     get_neighbors: impl Fn(&State) -> Vec<Direction>,
-    mut on_end: impl FnMut(&State),
-) {
+    is_valid_path: impl Fn(&State) -> bool,
+) -> u32 {
     let mut heap: BinaryHeap<State> = BinaryHeap::new();
     for start in starts {
         heap.push(start);
@@ -120,8 +102,11 @@ fn shortest_paths(
         }
 
         if state.pos == (grid.len() as i32 - 1, grid[0].len() as i32 - 1) {
-            on_end(&state);
-            continue;
+            if !is_valid_path(&state) {
+                continue;
+            }
+
+            return state.heat_loss;
         }
 
         for next_dir in get_neighbors(&state) {
@@ -146,6 +131,8 @@ fn shortest_paths(
             });
         }
     }
+
+    unreachable!("no solution found");
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
