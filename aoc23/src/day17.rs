@@ -17,12 +17,7 @@ pub fn part01(input: &str) -> anyhow::Result<u32> {
         .collect_vec();
 
     let get_neighbors = |state: &State| {
-        let mut neighbors = vec![
-            Direction::Up,
-            Direction::Down,
-            Direction::Left,
-            Direction::Right,
-        ];
+        let mut neighbors = Direction::ALL.to_vec();
         // not allowed to backtrack
         neighbors.retain(|&dir| dir != state.run_direction.opposite());
         // not allowed to travel in the same direction for more than 3 steps
@@ -51,12 +46,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
             // needs to move a minimum of four blocks in that direction before it can turn
             vec![state.run_direction]
         } else if state.run_len <= 10 {
-            let mut ns = vec![
-                Direction::Up,
-                Direction::Down,
-                Direction::Left,
-                Direction::Right,
-            ];
+            let mut ns = Direction::ALL.to_vec();
             // not allowed to backtrack
             ns.retain(|&dir| dir != state.run_direction.opposite());
             // can move a maximum of ten consecutive blocks without turning
@@ -175,6 +165,13 @@ enum Direction {
 }
 
 impl Direction {
+    const ALL: [Direction; 4] = [
+        Direction::Up,
+        Direction::Down,
+        Direction::Left,
+        Direction::Right,
+    ];
+
     fn next_row(&self, row: i32) -> i32 {
         match self {
             Direction::Up => row - 1,
