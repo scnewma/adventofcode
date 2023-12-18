@@ -17,7 +17,7 @@ pub fn part01(input: &str) -> anyhow::Result<u64> {
                 words.next().unwrap().parse().unwrap(),
             )
         })
-        .collect_vec();
+        .collect();
 
     Ok(solve(input))
 }
@@ -26,10 +26,8 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
     let input: Vec<(&str, u64)> = input
         .lines()
         .map(|line| {
-            let mut words = line.split_whitespace();
             // skip part 1 inputs
-            words.next().unwrap();
-            words.next().unwrap();
+            let mut words = line.split_whitespace().skip(2);
 
             let hex = words.next().unwrap();
             let hex = &hex[2..hex.len() - 1]; // trim "(#" and ")"
@@ -43,7 +41,7 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
             let dist = u64::from_str_radix(&hex[0..5], 16).unwrap();
             (dir, dist)
         })
-        .collect_vec();
+        .collect();
 
     Ok(solve(input))
 }
