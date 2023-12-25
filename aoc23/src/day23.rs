@@ -107,7 +107,7 @@ fn longest_path_dfs(
         if !visited.insert((nr, nc)) {
             continue;
         }
-        longest_path = longest_path.max(longest_path_dfs(&grid, visited, (nr, nc), end));
+        longest_path = longest_path.max(longest_path_dfs(grid, visited, (nr, nc), end));
         visited.remove(&(nr, nc));
     }
     longest_path

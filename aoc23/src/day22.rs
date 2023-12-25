@@ -41,7 +41,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     Ok(fallen)
 }
 
-fn drop_bricks(bricks: &mut Vec<(Point, Point)>, size: usize) -> usize {
+fn drop_bricks(bricks: &mut [(Point, Point)], size: usize) -> usize {
     let mut fallen = 0;
     // iterate bottom to top dropping bricks to fill the space
     // build a heightmap as we go to track z at each x,y

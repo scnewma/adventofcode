@@ -104,7 +104,7 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
         while !found {
             i += 1;
             simulate_button_press(&mut modules, |name, pulse, _| {
-                if name == &conj && pulse == &Pulse::Low {
+                if name == conj && pulse == &Pulse::Low {
                     found = true;
                 }
             });
