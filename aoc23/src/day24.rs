@@ -48,7 +48,42 @@ pub fn part01(input: &str) -> anyhow::Result<u64> {
     Ok(ans)
 }
 
-pub fn part02(_input: &str) -> anyhow::Result<i64> {
+pub fn part02(input: &str) -> anyhow::Result<i64> {
+    let hailstones = input
+        .lines()
+        .flat_map(Hailstone::from_str)
+        // you only need 3 points to define a plane
+        .take(3)
+        .collect_vec();
+
+    // print a mathematica script
+    let mut equations = vec![];
+    for (t, h) in hailstones.iter().enumerate() {
+        equations.push(format!("t{t} >= 0"));
+        equations.push(format!(
+            "{x} + {vx} t{t} == rx + vx t{t}",
+            t = t,
+            x = h.x,
+            vx = h.vx,
+        ));
+        equations.push(format!(
+            "{y} + {vy} t{t} == ry + vy t{t}",
+            t = t,
+            y = h.y,
+            vy = h.vy,
+        ));
+        equations.push(format!(
+            "{z} + {vz} t{t} == rz + vz t{t}",
+            t = t,
+            z = h.z,
+            vz = h.vz,
+        ));
+    }
+    println!(
+        "Solve[{{{}}}, {{rx, ry, rz, vx, vy, vz}}]",
+        equations.join(", ")
+    );
+
     Ok(0)
 }
 
