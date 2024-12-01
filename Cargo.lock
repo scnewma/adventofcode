@@ -128,6 +128,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc24"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arrayvec",
+ "clap 4.3.11",
+ "criterion",
+ "edit-distance",
+ "fxhash",
+ "itertools",
+ "num",
+ "polyfit-rs",
+ "rayon",
+ "rstest",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
