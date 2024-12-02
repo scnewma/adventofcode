@@ -97,7 +97,7 @@ fn permutations<'a>(
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day12.input.txt");
+    const INPUT: &str = include_str!("../inputs/day12.input.txt");
 
     #[test]
     fn test_part_one() {

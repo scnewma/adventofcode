@@ -44,7 +44,7 @@ pub fn part01(input: &str) -> usize {
             Either::Right(iproduct!(0..height, 0..width))
         };
         for (row, col) in points {
-            let mut tree = grid[row].get_mut(col).unwrap();
+            let tree = grid[row].get_mut(col).unwrap();
             tree.visible = tree.visible
                 || !(1..height - 1).contains(&row)
                 || !(1..width - 1).contains(&col)

@@ -56,11 +56,11 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
 
     // "fake" node that represents the escape node
     const ESCAPE_NODE: usize = (SIZE * SIZE * SIZE) as usize;
-    partitions.push((u32::max_value(), u32::max_value(), u32::max_value()));
+    partitions.push((u32::MAX, u32::MAX, u32::MAX));
 
     // "fake" node to union all lava droplets to
     const LAVA_NODE: usize = (SIZE * SIZE * SIZE) as usize + 1;
-    partitions.push((u32::max_value(), u32::max_value(), u32::max_value()));
+    partitions.push((u32::MAX, u32::MAX, u32::MAX));
 
     for pos in iproduct!(0..SIZE, 0..SIZE, 0..SIZE) {
         if cubes.contains(&pos) {

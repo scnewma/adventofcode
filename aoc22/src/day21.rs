@@ -25,7 +25,7 @@ pub fn part01(input: &str) -> anyhow::Result<isize> {
         .collect();
 
     let results = evaluate_graph(monkeys_lookup)?;
-    Ok(*results.get(&"root".to_string()).unwrap())
+    Ok(*results.get("root").unwrap())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<isize> {
@@ -97,10 +97,10 @@ pub fn part02(input: &str) -> anyhow::Result<isize> {
         current_monkey = parent.name.clone();
     }
     // we don't need root anymore and instead of needing to rewrite it we just discard it
-    monkeys_lookup.remove(&"root".to_string());
+    monkeys_lookup.remove("root");
 
     let results = evaluate_graph(monkeys_lookup)?;
-    Ok(*results.get(&"humn".to_string()).unwrap())
+    Ok(*results.get("humn").unwrap())
 }
 
 // evaluate_graph evaluates all node in the graph in topological sorted order, the values for each

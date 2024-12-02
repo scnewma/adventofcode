@@ -45,7 +45,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     ))
 }
 
-fn longest_path(grid: &Vec<Vec<char>>, start: (usize, usize), end: (usize, usize)) -> usize {
+fn longest_path(grid: &[Vec<char>], start: (usize, usize), end: (usize, usize)) -> usize {
     let mut queue = BinaryHeap::new();
     queue.push((0, start, vec![]));
 
@@ -117,7 +117,7 @@ fn longest_path_dfs(
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day23.input.txt");
+    const INPUT: &str = include_str!("../inputs/day23.input.txt");
 
     #[test]
     fn test_part_one() {

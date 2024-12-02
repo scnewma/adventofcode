@@ -85,7 +85,7 @@ fn calculate_area(points: &[(i64, i64)]) -> u64 {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day18.input.txt");
+    const INPUT: &str = include_str!("../inputs/day18.input.txt");
 
     #[test]
     fn test_part_one() {

@@ -183,7 +183,7 @@ mod tests {
     use super::*;
     use rstest::rstest;
 
-    const INPUT: &'static str = include_str!("../inputs/day07.input.txt");
+    const INPUT: &str = include_str!("../inputs/day07.input.txt");
 
     #[rstest]
     #[case("AAAAA", 6)]

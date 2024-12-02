@@ -11,7 +11,7 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 const WIDTH: usize = 10;
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    Ok(parse_input(input).filter(|v| check(&v)).count())
+    Ok(parse_input(input).filter(|v| check(v)).count())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
@@ -50,7 +50,7 @@ fn parse_input(input: &str) -> impl Iterator<Item = ArrayVec<usize, WIDTH>> + '_
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day02.input.txt");
+    const INPUT: &str = include_str!("../inputs/day02.input.txt");
 
     #[test]
     fn test_part_one() {

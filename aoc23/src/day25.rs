@@ -15,7 +15,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
         nodes.insert(lhs.to_string());
         rhs.split_whitespace().for_each(|s| {
             nodes.insert(s.to_string());
-            let mut v = vec![lhs.to_string(), s.to_string()];
+            let mut v = [lhs.to_string(), s.to_string()];
             v.sort();
             edges.insert((v[0].clone(), v[1].clone()));
         });
@@ -63,7 +63,7 @@ pub fn part02(_input: &str) -> anyhow::Result<i64> {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day25.input.txt");
+    const INPUT: &str = include_str!("../inputs/day25.input.txt");
 
     #[test]
     fn test_part_one() {

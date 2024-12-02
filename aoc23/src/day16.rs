@@ -36,7 +36,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     Ok(ans)
 }
 
-fn energized(grid: &Vec<Vec<char>>, start: (i32, i32, Direction)) -> usize {
+fn energized(grid: &[Vec<char>], start: (i32, i32, Direction)) -> usize {
     let height = grid.len() as i32;
     let width = grid[0].len() as i32;
 
@@ -112,7 +112,7 @@ impl Direction {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day16.input.txt");
+    const INPUT: &str = include_str!("../inputs/day16.input.txt");
 
     #[test]
     fn test_part_one() {

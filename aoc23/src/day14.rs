@@ -48,7 +48,7 @@ fn parse_input(input: &str) -> Vec<Vec<char>> {
         .collect_vec()
 }
 
-fn calculate_load(grid: &Vec<Vec<char>>) -> usize {
+fn calculate_load(grid: &[Vec<char>]) -> usize {
     let mut total = 0;
     for col in 0..grid[0].len() {
         for row in 0..grid.len() {
@@ -78,7 +78,7 @@ fn spin_cycle(orig: &mut Vec<Vec<char>>) {
     *orig = rotate(&grid);
 }
 
-fn tilt_north(grid: &mut Vec<Vec<char>>) {
+fn tilt_north(grid: &mut [Vec<char>]) {
     for col in 0..grid[0].len() {
         for row in 0..grid.len() {
             if grid[row][col] == '.' {
@@ -120,7 +120,7 @@ fn transpose<T: Clone>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>> {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day14.input.txt");
+    const INPUT: &str = include_str!("../inputs/day14.input.txt");
 
     #[test]
     fn test_part_one() {

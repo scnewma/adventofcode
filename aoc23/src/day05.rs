@@ -10,7 +10,7 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 pub fn part01(input: &str) -> anyhow::Result<u64> {
     let Input { seeds, mappings } = parse_input(input);
 
-    let mut closest = u64::max_value();
+    let mut closest = u64::MAX;
     for seed in seeds {
         let mut lookup = seed;
         for map in mappings.iter() {
@@ -32,11 +32,11 @@ pub fn part02(input: &str) -> anyhow::Result<u64> {
         mappings,
     } = parse_input(input);
 
-    let mut closest = u64::max_value();
+    let mut closest = u64::MAX;
     for (src, amt) in nums.into_iter().tuples() {
         let mut j = 0u64;
         while j < amt {
-            let mut skip = u64::max_value();
+            let mut skip = u64::MAX;
             let mut lookup = src + j;
             for map in mappings.iter() {
                 for (dst, src, amt) in map {
@@ -103,7 +103,7 @@ fn parse_map(s: &str) -> Vec<(u64, u64, u64)> {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day05.input.txt");
+    const INPUT: &str = include_str!("../inputs/day05.input.txt");
 
     #[test]
     fn test_part_one() {

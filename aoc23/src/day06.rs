@@ -64,7 +64,7 @@ fn winning_strategies(time: u64, min_distance: u64) -> u64 {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day06.input.txt");
+    const INPUT: &str = include_str!("../inputs/day06.input.txt");
 
     #[test]
     fn test_part_one() {

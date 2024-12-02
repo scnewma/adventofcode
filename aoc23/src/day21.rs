@@ -57,7 +57,7 @@ fn parse_input(input: &str) -> Vec<Vec<char>> {
     grid
 }
 
-fn garden_plots_reached(grid: &Vec<Vec<char>>, start: (i32, i32), steps: usize) -> usize {
+fn garden_plots_reached(grid: &[Vec<char>], start: (i32, i32), steps: usize) -> usize {
     let mut can_reach = HashSet::new();
     let mut seen = HashSet::new();
     seen.insert(start);
@@ -96,7 +96,7 @@ fn garden_plots_reached(grid: &Vec<Vec<char>>, start: (i32, i32), steps: usize) 
 }
 
 // turns a 1x1 to a NxN
-fn expand_grid(grid: &Vec<Vec<char>>, n: usize) -> Vec<Vec<char>> {
+fn expand_grid(grid: &[Vec<char>], n: usize) -> Vec<Vec<char>> {
     let size = grid.len();
     let mut expanded = vec![vec!['.'; size * n]; size * n];
     for i in 0..n * n {
@@ -113,7 +113,7 @@ fn expand_grid(grid: &Vec<Vec<char>>, n: usize) -> Vec<Vec<char>> {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day21.input.txt");
+    const INPUT: &str = include_str!("../inputs/day21.input.txt");
 
     #[test]
     fn test_part_one() {

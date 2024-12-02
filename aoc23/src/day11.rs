@@ -67,7 +67,7 @@ fn solve(input: &str, expansion: usize) -> u64 {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day11.input.txt");
+    const INPUT: &str = include_str!("../inputs/day11.input.txt");
 
     #[test]
     fn test_part_one() {

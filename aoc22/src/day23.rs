@@ -79,8 +79,8 @@ impl Simulation {
     }
 
     fn count_empty_ground(&self) -> usize {
-        let (mut minrow, mut maxrow) = (i32::max_value(), i32::min_value());
-        let (mut mincol, mut maxcol) = (i32::max_value(), i32::min_value());
+        let (mut minrow, mut maxrow) = (i32::MAX, i32::MIN);
+        let (mut mincol, mut maxcol) = (i32::MAX, i32::MIN);
         for pos in &self.elves {
             minrow = minrow.min(pos.0);
             maxrow = maxrow.max(pos.0);
@@ -143,7 +143,7 @@ impl Neighbors for u8 {
 
     #[inline]
     fn is_full(&self) -> bool {
-        *self == u8::max_value()
+        *self == u8::MAX
     }
 
     #[inline]

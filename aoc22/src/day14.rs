@@ -87,9 +87,6 @@ fn add(u: usize, i: i32) -> usize {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-struct Line(Point, Point);
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 struct Point {
     x: usize,

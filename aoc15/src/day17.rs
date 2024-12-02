@@ -20,7 +20,7 @@ pub fn part02(input: &str) -> usize {
     combos
         .into_iter()
         .map(|c| c.count_ones())
-        .fold((u32::max_value(), 0), |(min, n), e| match e.cmp(&min) {
+        .fold((u32::MAX, 0), |(min, n), e| match e.cmp(&min) {
             Ordering::Less => (e, 1),
             Ordering::Equal => (e, n + 1),
             Ordering::Greater => (min, n),

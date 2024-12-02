@@ -151,8 +151,8 @@ fn parse_input(input: &str) -> (HashMap<u16, Vec<(u16, u16)>>, HashMap<u16, u16>
     let valves: Vec<_> = lines
         .iter()
         .map(|(valve, _)| valve)
+        .filter(|&v| v.flow_rate > 0 || v.name == "AA")
         .cloned()
-        .filter(|v| v.flow_rate > 0 || v.name == "AA")
         .collect();
     // the open / close state of every valve is represented by a bitvec, this maps the name of each
     // valve into it's assigned bitvec index
@@ -183,7 +183,7 @@ fn parse_input(input: &str) -> (HashMap<u16, Vec<(u16, u16)>>, HashMap<u16, u16>
         .iter()
         .map(|v| (*valve_bit_indices.get(&v.name).unwrap(), v.flow_rate))
         .collect();
-    let aa_index = *valve_bit_indices.get(&"AA".to_string()).unwrap();
+    let aa_index = *valve_bit_indices.get("AA").unwrap();
     (collapsed_edges, flow_rates, aa_index)
 }
 

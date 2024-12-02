@@ -62,7 +62,7 @@ fn grove_coordinates(file: Vec<isize>, rounds: usize) -> isize {
         .sum()
 }
 
-fn next_pos<V>(pos: usize, amt: isize, vec: &Vec<V>) -> usize {
+fn next_pos<V>(pos: usize, amt: isize, vec: &[V]) -> usize {
     let num_rotations = amt.unsigned_abs() % vec.len();
     match amt.cmp(&0) {
         Ordering::Equal => pos,

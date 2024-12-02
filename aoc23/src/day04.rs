@@ -51,7 +51,7 @@ fn parse_input(input: &str) -> impl Iterator<Item = (HashSet<u32>, HashSet<u32>)
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day04.input.txt");
+    const INPUT: &str = include_str!("../inputs/day04.input.txt");
 
     #[test]
     fn test_part_one() {

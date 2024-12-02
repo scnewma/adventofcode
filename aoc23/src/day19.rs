@@ -194,7 +194,7 @@ impl FromStr for Expr {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.split_once(':') {
             Some((expr, res)) => {
-                let op_start = expr.find(|c: char| c == '>' || c == '<').unwrap();
+                let op_start = expr.find(['>', '<']).unwrap();
                 let category = &expr[..op_start];
                 let op = &expr[op_start..op_start + 1];
                 let val = expr[op_start + 1..].parse()?;
@@ -254,7 +254,7 @@ impl FromStr for Part {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day19.input.txt");
+    const INPUT: &str = include_str!("../inputs/day19.input.txt");
 
     #[test]
     fn test_part_one() {

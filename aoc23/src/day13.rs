@@ -93,7 +93,7 @@ fn lines_of_reflection(pattern: &Vec<Vec<char>>) -> Vec<LineOfReflection> {
     reflections
 }
 
-fn reflects_vertical(pattern: &Vec<Vec<char>>) -> Vec<usize> {
+fn reflects_vertical(pattern: &[Vec<char>]) -> Vec<usize> {
     let mut reflections = vec![];
     'outer: for row in 0..pattern.len() - 1 {
         let mut top = row as i32;
@@ -129,7 +129,7 @@ fn transpose<T: Clone>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>> {
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = include_str!("../inputs/day13.input.txt");
+    const INPUT: &str = include_str!("../inputs/day13.input.txt");
 
     #[test]
     fn test_part_one() {
