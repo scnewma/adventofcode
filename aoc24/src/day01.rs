@@ -1,4 +1,4 @@
-use fxhash::FxHashMap;
+use itertools::Itertools;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -8,9 +8,7 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    let mut right = Vec::new();
-    let left = parse_input(input, |i| right.push(i));
-    right.sort();
+    let (left, right) = parse_input(input);
     Ok(left
         .into_iter()
         .zip(right)
@@ -19,24 +17,24 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    let mut h = FxHashMap::default();
-    let left = parse_input(input, |i| {
-        h.entry(i).and_modify(|e| *e += 1).or_insert(1);
-    });
-    Ok(left.into_iter().map(|l| l * h.get(&l).unwrap_or(&0)).sum())
+    let (left, right) = parse_input(input);
+    let counts = right.into_iter().counts();
+    Ok(left
+        .into_iter()
+        .map(|l| l * counts.get(&l).unwrap_or(&0))
+        .sum())
 }
 
-fn parse_input<F>(input: &str, mut on_right: F) -> Vec<usize>
-where
-    F: FnMut(usize),
-{
-    let mut left: Vec<usize> = Vec::new();
+fn parse_input(input: &str) -> (Vec<usize>, Vec<usize>) {
+    let mut left = Vec::new();
+    let mut right = Vec::new();
     input.lines().map(str::split_whitespace).for_each(|mut it| {
         left.push(it.next().unwrap().parse().unwrap());
-        on_right(it.next().unwrap().parse().unwrap());
+        right.push(it.next().unwrap().parse().unwrap());
     });
     left.sort();
-    left
+    right.sort();
+    (left, right)
 }
 
 #[cfg(test)]
