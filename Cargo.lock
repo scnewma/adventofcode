@@ -78,7 +78,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrayvec",
- "bittle",
+ "bittle 0.4.4",
  "clap 4.3.11",
  "criterion",
  "fxhash",
@@ -98,7 +98,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrayvec",
- "bittle",
+ "bittle 0.4.4",
  "clap 4.3.11",
  "criterion",
  "itertools",
@@ -133,6 +133,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrayvec",
+ "bittle 0.6.0",
  "clap 4.3.11",
  "criterion",
  "edit-distance",
@@ -200,6 +201,12 @@ name = "bittle"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e33507bb79244ad59f15835da2b7efcbfeaf9917fa632a57ebf07178cd5f6dd4"
+
+[[package]]
+name = "bittle"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6ed4940d50ad35b979a4f2119316e5c9033589ba2c34b4949264b6f74ca54de"
 
 [[package]]
 name = "block-buffer"

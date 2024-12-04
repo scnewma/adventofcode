@@ -1,4 +1,4 @@
-use fxhash::FxHashSet;
+use bittle::BitsMut;
 use itertools::{iproduct, Itertools};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
@@ -37,19 +37,24 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 pub fn part02(input: &str) -> anyhow::Result<usize> {
     let (grid, h, w) = parse_input(input);
 
+    let mut ms_mask: u32 = 0;
+    ms_mask.set_bit('M' as u32 - 'A' as u32);
+    ms_mask.set_bit('S' as u32 - 'A' as u32);
+
     Ok(iproduct!(1..h - 1, 1..w - 1)
         .filter(|&(r, c)| grid[r][c] == 'A')
         .filter(|&(r, c)| {
             // check that both diagonals contain M and S
             [(-1, -1), (1, -1)].iter().all(|&(dr, dc)| {
-                let mut need = FxHashSet::from_iter(['M', 'S']);
+                let mut mask = 0u32;
+
                 // mul delta by 1/-1 to invert and get opposite corner on same diagonal
                 [1, -1].iter().for_each(|sign| {
                     let nr = r.checked_add_signed(dr * sign).unwrap();
                     let nc = c.checked_add_signed(dc * sign).unwrap();
-                    need.remove(&grid[nr][nc]);
+                    mask.set_bit(grid[nr][nc] as u32 - 'A' as u32);
                 });
-                need.is_empty()
+                mask & ms_mask == ms_mask
             })
         })
         .count())
