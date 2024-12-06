@@ -24,6 +24,8 @@ pub mod day05;
 // pub mod day24;
 // pub mod day25;
 
+pub mod topsort;
+
 pub struct SolveInfo {
     pub part01: String,
     pub part02: String,

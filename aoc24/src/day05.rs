@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use arrayvec::ArrayVec;
 use fxhash::FxHashMap;
 use itertools::Itertools;
@@ -47,40 +45,17 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 }
 
 fn topsort(update: &[usize], ordering: &FxHashMap<usize, VecPages>) -> VecPages {
-    let mut q = VecDeque::new();
-    let mut in_degree = FxHashMap::<usize, usize>::default();
-    let mut in_edges = FxHashMap::<usize, VecPages>::default();
-
+    let mut ts = crate::topsort::ArrayTopSort::<usize, MAX_WIDTH>::new();
     for n in update {
-        if let Some(depends_on) = ordering.get(&n) {
+        if let Some(depends_on) = ordering.get(n) {
             for v in depends_on {
                 if update.contains(v) {
-                    in_edges.entry(*v).or_default().push(*n);
-                    in_degree.entry(*n).and_modify(|n| *n += 1).or_insert(1);
+                    ts.add_dependency(*v, *n);
                 }
             }
         }
     }
-
-    for n in update {
-        if in_degree.get(n).is_none() {
-            q.push_back(n);
-        }
-    }
-
-    let mut ordered = VecPages::new();
-    while let Some(n) = q.pop_front() {
-        ordered.push(*n);
-        if let Some(edges) = in_edges.get(n) {
-            edges.iter().for_each(|v| {
-                in_degree.entry(*v).and_modify(|n| *n -= 1);
-                if in_degree[v] == 0 {
-                    q.push_back(v);
-                }
-            })
-        }
-    }
-    ordered
+    ts.collect()
 }
 
 fn parse_input(input: &str) -> (Vec<VecPages>, FxHashMap<usize, VecPages>) {
