@@ -1,5 +1,4 @@
-use fxhash::{FxHashMap, FxHashSet};
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use bittle::{Bits, BitsMut};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -8,14 +7,14 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     })
 }
 
+const WIDTH: usize = 130;
+const HEIGHT: usize = 130;
+
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let (grid, start_pos) = parse_input(input);
-    let mut visited = FxHashSet::default();
-    simulate(&grid, start_pos, |pos, _| {
-        visited.insert(pos);
-        true
-    });
-    Ok(visited.len())
+    let mut visited = [0u64; (WIDTH * HEIGHT) / 64];
+    GuardIter::new(&grid, start_pos, None).for_each(|(pos, _)| visited.set_bit(index(pos)));
+    Ok(visited.count_ones() as usize)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
@@ -23,45 +22,62 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 
     // only need to try and put an obstacle in positions that the guard would visit on the
     // pre-modified grid
-    let mut initial_visited = FxHashSet::default();
-    simulate(&grid, start_pos, |pos, _| {
-        initial_visited.insert(pos);
-        true
-    });
-
-    // can't put an obstacle in the start position
-    initial_visited.remove(&start_pos);
+    let mut initial_visited = [0u64; (WIDTH * HEIGHT) / 64];
+    GuardIter::new(&grid, start_pos, None).for_each(|(pos, _)| initial_visited.set_bit(index(pos)));
+    initial_visited.clear_bit(index(start_pos));
 
     Ok(initial_visited
-        .par_iter()
+        .iter_ones()
         .filter(|obstacle_pos| {
-            let mut grid = grid.clone();
-            grid.insert(**obstacle_pos, '#');
-
-            let mut looped = false;
-            let mut visited = FxHashSet::default();
-            simulate(&grid, start_pos, |pos, dir| {
-                let new = visited.insert((pos, dir));
-                if !new {
-                    looped = true;
-                }
-                new
-            });
-            looped
+            let r = obstacle_pos / WIDTH as u32;
+            let c = obstacle_pos % WIDTH as u32;
+            // basically a 3d matrix -- row of cells where each cell stores a bit for each
+            // direction
+            let mut visited = [0u64; (WIDTH * HEIGHT * 4) / 64];
+            GuardIter::new(&grid, start_pos, Some((r as isize, c as isize)))
+                // if we find a pos+dir that's been seen before, we've looped
+                .any(|(pos, dir)| {
+                    let looped = visited.test_bit(index3(pos, dir));
+                    visited.set_bit(index3(pos, dir));
+                    looped
+                })
         })
         .count())
 }
 
-fn simulate<F>(grid: &Grid, start_pos: Pos, mut on_visit: F)
-where
-    F: FnMut(Pos, u8) -> bool,
-{
-    let mut pos = start_pos;
-    let mut dir = 0;
+fn index(pos: Pos) -> u32 {
+    (pos.0 as u32 * WIDTH as u32) + pos.1 as u32
+}
 
-    while on_visit(pos, dir) {
-        let (row, col) = pos;
-        let next = match dir {
+fn index3(pos: Pos, dir: u8) -> u32 {
+    (pos.0 as u32 * WIDTH as u32 * 4) + (pos.1 as u32 * 4) + dir as u32
+}
+
+struct GuardIter<'a> {
+    grid: &'a Grid,
+    pos: Pos,
+    dir: u8,
+    obstacle: Option<Pos>,
+}
+
+impl<'a> GuardIter<'a> {
+    fn new(grid: &'a Grid, start_pos: Pos, obstacle: Option<Pos>) -> Self {
+        Self {
+            grid,
+            // start one tile south to "cleanly" handle the visit of the start_pos
+            pos: (start_pos.0 + 1, start_pos.1),
+            dir: 0,
+            obstacle,
+        }
+    }
+}
+
+impl Iterator for GuardIter<'_> {
+    type Item = (Pos, u8);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (row, col) = self.pos;
+        let next = match self.dir {
             0 => (row - 1, col), // north
             1 => (row, col + 1), // east
             2 => (row + 1, col), // south
@@ -69,17 +85,31 @@ where
             _ => unreachable!(),
         };
 
-        match grid.get(&next) {
-            Some('#') => dir = (dir + 1) % 4,
-            Some('.') => pos = next,
-            None => break,
+        let tile = if self.obstacle.is_some_and(|o| o == next) {
+            Some('#')
+        } else {
+            if next.0 < 0 || (next.0 as usize) >= HEIGHT || next.1 < 0 || (next.1 as usize) >= WIDTH
+            {
+                None
+            } else {
+                Some(self.grid[next.0 as usize][next.1 as usize])
+            }
+        };
+
+        tile.inspect(|&t| match t {
+            '#' => self.dir = (self.dir + 1) % 4,
+            '.' => self.pos = next,
             _ => unreachable!(),
-        }
+        })
+        .map(|_| (self.pos, self.dir))
     }
 }
 
+type Grid = [[char; WIDTH]; HEIGHT];
+type Pos = (isize, isize);
+
 fn parse_input(input: &str) -> (Grid, Pos) {
-    let mut grid = FxHashMap::default();
+    let mut grid = [['.'; WIDTH]; HEIGHT];
     let mut pos = None;
     for (row, line) in input.lines().enumerate() {
         for (col, mut ch) in line.char_indices() {
@@ -87,14 +117,11 @@ fn parse_input(input: &str) -> (Grid, Pos) {
                 pos = Some((row as isize, col as isize));
                 ch = '.';
             }
-            grid.insert((row as isize, col as isize), ch);
+            grid[row][col] = ch;
         }
     }
     (grid, pos.unwrap())
 }
-
-type Grid = FxHashMap<Pos, char>;
-type Pos = (isize, isize);
 
 #[cfg(test)]
 mod tests {
