@@ -9,67 +9,38 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    Ok(solve::<false>(input))
+    let (antennas, height, width) = parse_input(input);
+    Ok(antennas
+        .values()
+        .fold(FxHashSet::<(isize, isize)>::default(), |mut acc, locs| {
+            locs.into_iter()
+                .permutations(2)
+                .map(|pair| (2 * pair[0].0 - pair[1].0, 2 * pair[0].1 - pair[1].1))
+                .filter(|&(r, c)| r >= 0 && r < height && c >= 0 && c < width)
+                .for_each(|pos| {
+                    acc.insert(pos);
+                });
+            acc
+        })
+        .len())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(solve::<true>(input))
-}
-
-fn solve<const PART2: bool>(input: &str) -> usize {
     let (antennas, height, width) = parse_input(input);
-
     let mut antinodes = FxHashSet::default();
-    for (_, locs) in antennas {
-        for pair in locs.iter().combinations(2) {
-            if PART2 {
-                antinodes.insert(pair[0].clone());
-                antinodes.insert(pair[1].clone());
-            }
-
-            let dr = pair[0].0.abs_diff(pair[1].0) as isize;
-            let dc = pair[0].1.abs_diff(pair[1].1) as isize;
-
-            let (top, bot) = if pair[0].0 < pair[1].0 {
-                (pair[0], pair[1])
-            } else {
-                (pair[1], pair[0])
-            };
-
-            // add performs the insert given the location tuple (isize, isize) and the operations
-            // to perform on the row, col.
-            macro_rules! add {
-                ($location:ident, $op_row:tt, $op_col:tt) => {
-                    if !PART2 {
-                        let row = $location.0 $op_row dr;
-                        let col = $location.1 $op_col dc;
-                        if row >= 0 && row < height && col >= 0 && col < width {
-                            antinodes.insert((row, col));
-                        }
-                    } else {
-                        (1..)
-                            .map(|i| ($location.0 $op_row (dr * i), $location.1 $op_col (dc * i)))
-                            .take_while(|&(r, c)| r >= 0 && r < height && c >= 0 && c < width)
-                            .for_each(|pos| {
-                                antinodes.insert(pos);
-                            });
-                    }
-                };
-            }
-
-            if top.1 < bot.1 {
-                // top-left -> bottom-right diagonal
-                add!(top, -, -);
-                add!(bot, +, +);
-            } else {
-                // bottom-left -> top-right digonal (or vertical)
-                add!(top, -, +);
-                add!(bot, +, -);
-            }
+    for locs in antennas.values() {
+        for pair in locs.into_iter().permutations(2) {
+            let dr = pair[0].0 - pair[1].0;
+            let dc = pair[0].1 - pair[1].1;
+            (0..)
+                .map(|i| (pair[0].0 + (dr * i), pair[0].1 + (dc * i)))
+                .take_while(|&(r, c)| r >= 0 && r < height && c >= 0 && c < width)
+                .for_each(|pos| {
+                    antinodes.insert(pos);
+                });
         }
     }
-
-    antinodes.len()
+    Ok(antinodes.len())
 }
 
 fn parse_input(input: &str) -> (FxHashMap<char, FxHashSet<(isize, isize)>>, isize, isize) {
