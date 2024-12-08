@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+shopt -s extglob
+
+YEAR="$(date +%y)"
+DAY="$(date +%d)"
+DAY="${DAY##+(0)}"
+HOUR="$(date +%H)"
+HOUR="${HOUR##+(0)}"
+
+# AoC comes out of 10p MST, so we account for TZ offset
+# Assuming that it's after 9p MST, we are working the
+# next day
+if (( HOUR >= 21 )); then
+    DAY=$(( DAY + 1 ))
+fi
+
+FNAME="input"
+while getopts ":ed:" opt; do
+    case $opt in
+        e)
+            FNAME="example"
+            ;;
+        d)
+            DAY="$OPTARG"
+            ;;
+        \?)
+            echo "Unknown option"
+            exit 1
+            ;;
+    esac
+
+done
+
+DAY_FNAME="$(printf '%02d' "$DAY")"
+
+PKG="aoc$YEAR"
+cargo run --release -p "$PKG" "$DAY" < "$PKG/inputs/day$DAY_FNAME.$FNAME.txt"
