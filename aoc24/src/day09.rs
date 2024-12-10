@@ -18,16 +18,18 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
             Block::File(..) => defrag.push(block),
             Block::Free(mut free_space) => {
                 while free_space > 0 && !blocks.is_empty() {
-                    if let Some(last_block) = blocks.pop_back() {
-                        if let Block::File(id, size) = last_block {
-                            let rem = size.saturating_sub(free_space);
-                            let space_taken = free_space.min(size);
-                            if rem > 0 {
-                                blocks.push_back(Block::File(id, rem));
-                            }
-                            defrag.push(Block::File(id, space_taken));
-                            free_space -= space_taken;
+                    let Some(last_block) = blocks.pop_back() else {
+                        continue;
+                    };
+
+                    if let Block::File(id, size) = last_block {
+                        let rem = size.saturating_sub(free_space);
+                        let space_taken = free_space.min(size);
+                        if rem > 0 {
+                            blocks.push_back(Block::File(id, rem));
                         }
+                        defrag.push(Block::File(id, space_taken));
+                        free_space -= space_taken;
                     }
                 }
             }
@@ -52,15 +54,16 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         };
 
         for left in 0..right {
-            if let Block::Free(free_space) = defrag[left] {
-                if free_space >= size {
-                    defrag[left] = Block::File(id, size);
-                    defrag[right] = Block::Free(size);
-                    if free_space - size > 0 {
-                        defrag.insert(left + 1, Block::Free(free_space - size));
-                    }
-                    break;
+            let Block::Free(free_space) = defrag[left] else {
+                continue;
+            };
+            if free_space >= size {
+                defrag[left] = Block::File(id, size);
+                defrag[right] = Block::Free(size);
+                if free_space - size > 0 {
+                    defrag.insert(left + 1, Block::Free(free_space - size));
                 }
+                break;
             }
         }
         right -= 1;
@@ -87,21 +90,19 @@ fn checksum(blocks: &[Block]) -> usize {
 }
 
 fn parse_input(input: &str) -> VecDeque<Block> {
-    let mut is_file = true;
     let mut id = 0;
     let mut blocks = VecDeque::new();
-    for ch in input.trim().chars() {
+    for (i, ch) in input.trim().char_indices() {
         let n = ch
             .to_digit(10)
             .with_context(|| format!("'{ch}' is not a digit"))
             .unwrap();
-        if is_file {
+        if i % 2 == 0 {
             blocks.push_back(Block::File(id, n));
             id += 1;
         } else {
             blocks.push_back(Block::Free(n));
         }
-        is_file = !is_file;
     }
     blocks
 }
