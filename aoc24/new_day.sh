@@ -48,7 +48,7 @@ EOF
 
 GEN_BENCHES_LINE="gen_benches!["
 i=1
-while (( i < INPUT )); do
+while (( i <= INPUT )); do
     if (( i != 1 )); then
         GEN_BENCHES_LINE="$GEN_BENCHES_LINE, "
     fi
