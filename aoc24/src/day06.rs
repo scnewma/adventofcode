@@ -87,13 +87,14 @@ impl Iterator for GuardIter<'_> {
 
         let tile = if self.obstacle.is_some_and(|o| o == next) {
             Some('#')
+        } else if next.0 < 0
+            || (next.0 as usize) >= HEIGHT
+            || next.1 < 0
+            || (next.1 as usize) >= WIDTH
+        {
+            None
         } else {
-            if next.0 < 0 || (next.0 as usize) >= HEIGHT || next.1 < 0 || (next.1 as usize) >= WIDTH
-            {
-                None
-            } else {
-                Some(self.grid[next.0 as usize][next.1 as usize])
-            }
+            Some(self.grid[next.0 as usize][next.1 as usize])
         };
 
         tile.inspect(|&t| match t {

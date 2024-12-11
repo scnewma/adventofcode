@@ -86,6 +86,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     Ok(res)
 }
 
+#[allow(clippy::type_complexity)]
 fn parse_input(input: &str) -> (FxHashMap<(isize, isize), u32>, FxHashSet<(isize, isize)>) {
     let mut grid = FxHashMap::default();
     let mut trailheads = FxHashSet::default();

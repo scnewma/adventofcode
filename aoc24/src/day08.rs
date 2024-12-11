@@ -13,7 +13,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     Ok(antennas
         .values()
         .fold(FxHashSet::<(isize, isize)>::default(), |mut acc, locs| {
-            locs.into_iter()
+            locs.iter()
                 .permutations(2)
                 .map(|pair| (2 * pair[0].0 - pair[1].0, 2 * pair[0].1 - pair[1].1))
                 .filter(|&(r, c)| r >= 0 && r < height && c >= 0 && c < width)
@@ -29,7 +29,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     let (antennas, height, width) = parse_input(input);
     let mut antinodes = FxHashSet::default();
     for locs in antennas.values() {
-        for pair in locs.into_iter().permutations(2) {
+        for pair in locs.iter().permutations(2) {
             let dr = pair[0].0 - pair[1].0;
             let dc = pair[0].1 - pair[1].1;
             (0..)
@@ -43,6 +43,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     Ok(antinodes.len())
 }
 
+#[allow(clippy::type_complexity)]
 fn parse_input(input: &str) -> (FxHashMap<char, FxHashSet<(isize, isize)>>, isize, isize) {
     let height = input.lines().count() as isize;
     let width = input.lines().next().unwrap().len() as isize;
