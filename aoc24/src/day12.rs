@@ -15,11 +15,19 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 
     let mut sum = 0;
     let mut visited = FxHashSet::default();
-    for (r, c) in iproduct!(0..height, 0..width) {
-        let r = r as isize;
-        let c = c as isize;
+    for (r, c) in iproduct!(0..height as isize, 0..width as isize) {
+        if visited.contains(&(r, c)) {
+            continue;
+        }
 
         let region_ch = grid[&(r, c)];
+
+        // checks if a grid[(row,col)] == region_ch
+        macro_rules! is_same_region {
+            ($row:expr, $col:expr) => {
+                grid.get(&($row, $col)).is_some_and(|ch| *ch == region_ch)
+            };
+        }
 
         let mut q = VecDeque::new();
         q.push_back((r, c));
@@ -27,15 +35,12 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
         let mut area = 0;
         let mut perimeter = 0;
         while let Some((r, c)) = q.pop_front() {
-            if grid.get(&(r, c)).is_none_or(|ch| *ch != region_ch) {
-                continue;
-            }
-            if !visited.insert((r, c)) {
+            if !is_same_region!(r, c) || !visited.insert((r, c)) {
                 continue;
             }
             perimeter += [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
                 .into_iter()
-                .filter(|&(r, c)| grid.get(&(r, c)).is_none_or(|ch| *ch != region_ch))
+                .filter(|&(r, c)| !is_same_region!(r, c))
                 .count();
 
             area += 1;
@@ -54,6 +59,14 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 pub fn part02(input: &str) -> anyhow::Result<usize> {
     let (grid, height, width) = parse_input(input);
 
+    #[derive(Hash, PartialEq, Eq)]
+    enum Corner {
+        TopLeft,
+        TopRight,
+        BotLeft,
+        BotRight,
+    }
+
     let mut sum = 0;
     let mut visited = FxHashSet::default();
     for (r, c) in iproduct!(0..height as isize, 0..width as isize) {
@@ -63,29 +76,21 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 
         let region_ch = grid[&(r, c)];
 
-        // helper function
-        let is_region_ch =
-            |r: isize, c: isize| grid.get(&(r, c)).is_some_and(|ch| *ch == region_ch);
+        // checks if a grid[(row,col)] == region_ch
+        macro_rules! is_same_region {
+            ($row:expr, $col:expr) => {
+                grid.get(&($row, $col)).is_some_and(|ch| *ch == region_ch)
+            };
+        }
 
         let mut q = VecDeque::new();
         q.push_back((r, c));
 
         let mut area = 0;
-
         let mut vertices = FxHashSet::default();
-        #[derive(Hash, PartialEq, Eq)]
-        enum Corner {
-            TopLeft,
-            TopRight,
-            BotLeft,
-            BotRight,
-        }
 
         while let Some((r, c)) = q.pop_front() {
-            if grid.get(&(r, c)).is_none_or(|ch| *ch != region_ch) {
-                continue;
-            }
-            if !visited.insert((r, c)) {
+            if !is_same_region!(r, c) || !visited.insert((r, c)) {
                 continue;
             }
             let vertex_checks = [
@@ -97,8 +102,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             for (corner, (dr, dc)) in vertex_checks {
                 let (nr, nc) = (r + dr, c + dc);
                 let is_inner_corner =
-                    is_region_ch(nr, c) && is_region_ch(r, nc) && !is_region_ch(nr, nc);
-                let is_outer_corner = !is_region_ch(nr, c) && !is_region_ch(r, nc);
+                    is_same_region!(nr, c) && is_same_region!(r, nc) && !is_same_region!(nr, nc);
+                let is_outer_corner = !is_same_region!(nr, c) && !is_same_region!(r, nc);
                 if is_inner_corner || is_outer_corner {
                     vertices.insert((corner, r, c));
                 }
