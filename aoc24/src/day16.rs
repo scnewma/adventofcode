@@ -1,4 +1,9 @@
-use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
+use std::{
+    cmp::Reverse,
+    collections::{BinaryHeap, HashMap, HashSet},
+};
+
+use fxhash::{FxHashMap, FxHashSet};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -25,18 +30,15 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
         }
     }
 
-    // let mut q = VecDeque::new();
     let mut heap: BinaryHeap<State> = BinaryHeap::new();
     heap.push(State {
         pos: start,
         dir: Dir::East,
         cost: 0,
-        path: vec![],
+        path: FxHashMap::default(),
     });
-    // q.push_back((start, Dir::East, 0, vec![]));
     let mut visited = HashSet::new();
     let mut min = usize::MAX;
-    // while let Some((pos, dir, cost, path)) = q.pop_front() {
     while let Some(State {
         pos,
         dir,
@@ -49,29 +51,10 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
         }
 
         let mut path = path.clone();
-        path.push((pos, dir));
+        path.insert((pos, dir), 0);
 
         if pos == end {
             min = min.min(cost);
-            // println!("--- cost: {cost}");
-            // for r in 0..15 {
-            //     for c in 0..15 {
-            //         if let Some((_, dir)) = path.iter().find(|(pos, _dir)| *pos == (r, c)) {
-            //             print!(
-            //                 "{}",
-            //                 match dir {
-            //                     Dir::North => '^',
-            //                     Dir::South => 'v',
-            //                     Dir::East => '>',
-            //                     Dir::West => '<',
-            //                 }
-            //             )
-            //         } else {
-            //             print!("{}", grid[&(r, c)]);
-            //         }
-            //     }
-            //     println!();
-            // }
         }
 
         // moves
@@ -93,22 +76,180 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
             cost: cost + 1000,
             path: path.clone(),
         });
-        // q.push_back((pos, dir.turn_clockwise(), cost + 1000, path.clone()));
-        // q.push_back((pos, dir.turn_counter_clockwise(), cost + 1000, path));
     }
     Ok(min)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let min = part01(input)?;
+
+    let mut grid = FxHashMap::default();
+    // let height = input.lines().count();
+    // let width = input.lines().next().unwrap().len();
+    let mut start = (0isize, 0isize);
+    let mut end = (0isize, 0isize);
+    for (r, line) in input.lines().enumerate() {
+        for (c, mut ch) in line.char_indices() {
+            if ch == 'S' {
+                start = (r as isize, c as isize);
+                ch = '.';
+            }
+            if ch == 'E' {
+                end = (r as isize, c as isize);
+                ch = '.';
+            }
+            grid.insert((r as isize, c as isize), ch);
+        }
+    }
+
+    // TODO: if we implemented dfs directly instead of via binary heap then we wouldn't need to do
+    // some many clones of the path, which should be MUCH faster
+    // Not sure what exactly is incorrect here though...
+    // fn dfs(
+    //     min: usize,
+    //     grid: &FxHashMap<(isize, isize), char>,
+    //     height: isize,
+    //     width: isize,
+    //     pos: (isize, isize),
+    //     dir: Dir,
+    //     cost: usize,
+    //     end_pos: (isize, isize),
+    //     seats: &mut FxHashSet<(isize, isize)>,
+    //     current: &mut FxHashSet<(isize, isize)>,
+    //     min_costs: &mut FxHashMap<((isize, isize), Dir), usize>,
+    // ) {
+    //     if cost > min {
+    //         return;
+    //     }
+    //     if cost == min && pos == end_pos {
+    //         for &pos in current.iter() {
+    //             seats.insert(pos);
+    //         }
+    //         return;
+    //     }
+
+    //     for (pos, dir, dcost) in [
+    //         (dir.move_forward(pos), dir, 0),
+    //         (pos, dir.turn_clockwise(), 1000),
+    //         (pos, dir.turn_counter_clockwise(), 1000),
+    //     ] {
+    //         if grid.get(&pos).is_some_and(|ch| *ch != '#') && !current.contains(&pos) {
+    //             current.insert(pos);
+    //             dfs(
+    //                 min,
+    //                 grid,
+    //                 height,
+    //                 width,
+    //                 pos,
+    //                 dir,
+    //                 cost + dcost + 1,
+    //                 end_pos,
+    //                 seats,
+    //                 current,
+    //                 min_costs,
+    //             );
+    //             current.remove(&pos);
+    //         }
+    //         // if grid.get(&pos).is_none_or(|ch| *ch == '#')
+    //         //     || current.contains(&pos)
+    //         //     || min_costs
+    //         //         .get(&(pos, dir))
+    //         //         .is_some_and(|c| cost + dcost > *c)
+    //         // {
+    //         //     continue;
+    //         // }
+    //     }
+    // }
+
+    // let mut seats = FxHashSet::default();
+    // let mut current = FxHashSet::default();
+    // current.insert(start);
+    // let mut min_costs = FxHashMap::default();
+    // min_costs.insert((start, Dir::East), 0);
+    // dfs(
+    //     min,
+    //     &grid,
+    //     height as isize,
+    //     width as isize,
+    //     start,
+    //     Dir::East,
+    //     0,
+    //     end,
+    //     &mut seats,
+    //     &mut current,
+    //     &mut min_costs,
+    // );
+    // Ok(seats.len())
+
+    let mut heap: BinaryHeap<Reverse<State>> = BinaryHeap::new();
+    heap.push(Reverse(State {
+        pos: start,
+        dir: Dir::East,
+        cost: 0,
+        path: FxHashMap::default(),
+    }));
+    let mut min_costs = FxHashMap::default();
+    let mut best_seats = FxHashSet::default();
+    while let Some(Reverse(State {
+        pos,
+        dir,
+        cost,
+        mut path,
+    })) = heap.pop()
+    {
+        if cost > min
+            || min_costs
+                .get(&(pos, dir))
+                .is_some_and(|min_cost| cost > *min_cost)
+            || path.contains_key(&(pos, dir))
+            || grid.get(&pos).is_none_or(|ch| *ch == '#')
+        {
+            continue;
+        }
+
+        path.insert((pos, dir), cost);
+        min_costs.insert((pos, dir), cost);
+
+        if pos == end && cost == min {
+            for ((pos, _), _) in &path {
+                best_seats.insert(*pos);
+            }
+            continue;
+        }
+
+        // moves
+        if cost + 1 <= min {
+            heap.push(Reverse(State {
+                pos: dir.move_forward(pos),
+                dir,
+                cost: cost + 1,
+                path: path.clone(),
+            }));
+        }
+        if cost + 1000 <= min {
+            heap.push(Reverse(State {
+                pos,
+                dir: dir.turn_clockwise(),
+                cost: cost + 1000,
+                path: path.clone(),
+            }));
+            heap.push(Reverse(State {
+                pos,
+                dir: dir.turn_counter_clockwise(),
+                cost: cost + 1000,
+                path,
+            }));
+        }
+    }
+    Ok(best_seats.len())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct State {
     pos: (isize, isize),
     dir: Dir,
     cost: usize,
-    path: Vec<((isize, isize), Dir)>,
+    path: FxHashMap<((isize, isize), Dir), usize>,
 }
 
 impl Ord for State {
@@ -169,12 +310,13 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(109496, ans);
     }
 
+    #[ignore]
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(551, ans);
     }
 }
