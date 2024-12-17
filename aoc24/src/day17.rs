@@ -10,18 +10,8 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 
 pub fn part01(input: &str) -> String {
     let ((ra, rb, rc), program) = parse_input(input);
-    let mut output = Vec::new();
-    let mut cpu = Cpu {
-        ra,
-        rb,
-        rc,
-        output: |n| {
-            output.push(n);
-            true
-        },
-    };
-    cpu.process(&program);
-    output.into_iter().join(",")
+    let mut cpu = Cpu { ra, rb, rc };
+    cpu.process(&program).into_iter().join(",")
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
@@ -52,12 +42,14 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             // << 3 moves the already solved bits left, we then check 0..8 to determine what the
             // next number is
             let ra = (candidate << 3) + i;
-            let mut rb = ra % 8;
-            rb ^= 1;
-            let rc = ra / 2usize.pow(rb as u32);
-            rb ^= rc;
-            rb ^= 6;
-            if rb % 8 == *n {
+
+            let mut cpu = Cpu { ra, rb: 0, rc: 0 };
+            // ASSUMPTION: we trim the last jump instruction off of the program so that we only run
+            // one iteration of the loop, this allows us to solve just this one number
+            // You don't NEED to do this, but it's much more performant than running the program
+            // to termination only to take the first output
+            let output = cpu.process(&program[..program.len() - 2]);
+            if output.first().unwrap() == n {
                 next.push(ra);
             }
         }
@@ -67,21 +59,15 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 }
 
 #[derive(Debug)]
-struct Cpu<F>
-where
-    F: FnMut(usize) -> bool,
-{
+struct Cpu {
     ra: usize,
     rb: usize,
     rc: usize,
-    output: F,
 }
 
-impl<F> Cpu<F>
-where
-    F: FnMut(usize) -> bool,
-{
-    fn process(&mut self, program: &[usize]) -> bool {
+impl Cpu {
+    fn process(&mut self, program: &[usize]) -> Vec<usize> {
+        let mut output = Vec::new();
         let mut ip = 0;
         while ip < program.len() {
             let opcode = program[ip];
@@ -97,19 +83,14 @@ where
                     }
                 }
                 4 => self.rb ^= self.rc, // ignores operand
-                5 => {
-                    let v = self.decode_combo(operand) % 8;
-                    if !(self.output)(v) {
-                        return false;
-                    }
-                }
+                5 => output.push(self.decode_combo(operand) % 8),
                 6 => self.rb = self.ra / 2usize.pow(self.decode_combo(operand) as u32),
                 7 => self.rc = self.ra / 2usize.pow(self.decode_combo(operand) as u32),
                 _ => unreachable!("unknown opcode {opcode}"),
             }
             ip = ip_next;
         }
-        true
+        output
     }
 
     fn decode_combo(&self, operand: usize) -> usize {
