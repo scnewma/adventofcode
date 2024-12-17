@@ -111,10 +111,8 @@ fn connected_robots(
     y: isize,
     visited: &mut FxHashSet<(isize, isize)>,
 ) -> usize {
-    if x < 0
-        || x >= WIDTH
-        || y < 0
-        || y >= HEIGHT
+    if !(0..WIDTH).contains(&x)
+        || !(0..HEIGHT).contains(&y)
         || grid.get(&(x, y)).is_none()
         || !visited.insert((x, y))
     {

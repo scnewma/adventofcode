@@ -211,14 +211,14 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
         min_costs.insert((pos, dir), cost);
 
         if pos == end && cost == min {
-            for ((pos, _), _) in &path {
+            for (pos, _) in path.keys() {
                 best_seats.insert(*pos);
             }
             continue;
         }
 
         // moves
-        if cost + 1 <= min {
+        if cost < min {
             heap.push(Reverse(State {
                 pos: dir.move_forward(pos),
                 dir,

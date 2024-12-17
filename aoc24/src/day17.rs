@@ -1,5 +1,4 @@
 use arrayvec::ArrayVec;
-use fxhash::FxHashSet;
 use itertools::{iproduct, Itertools};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
