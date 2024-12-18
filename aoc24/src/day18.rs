@@ -21,22 +21,15 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> String {
-    let mut bytes = iter_bytes(input);
+    let mut fallen: FxHashSet<(isize, isize)> = iter_bytes(input).collect();
+    let mut bytes = iter_bytes(input).rev();
 
-    let mut fallen = FxHashSet::default();
-    let mut path = shortest_path(&fallen).unwrap();
-    loop {
-        let byte = bytes.next().unwrap();
-        fallen.insert(byte);
-
-        // if we blocked the current path, we try and find a new path
-        if path.contains(&byte) {
-            match shortest_path(&fallen) {
-                Some(p) => path = p,
-                None => break format!("{},{}", byte.0, byte.1),
-            }
-        }
+    let mut last_byte = (0, 0);
+    while shortest_path(&fallen).is_none() {
+        last_byte = bytes.next().unwrap();
+        fallen.remove(&last_byte);
     }
+    format!("{},{}", last_byte.0, last_byte.1)
 }
 
 fn shortest_path(bytes: &FxHashSet<(isize, isize)>) -> Option<FxHashSet<(isize, isize)>> {
@@ -66,7 +59,7 @@ fn shortest_path(bytes: &FxHashSet<(isize, isize)>) -> Option<FxHashSet<(isize, 
     None
 }
 
-fn iter_bytes(input: &str) -> impl Iterator<Item = (isize, isize)> + '_ {
+fn iter_bytes(input: &str) -> impl DoubleEndedIterator<Item = (isize, isize)> + '_ {
     input.lines().map(|s| {
         let (r, c) = s.split_once(',').unwrap();
         let r: isize = r.parse().unwrap();
