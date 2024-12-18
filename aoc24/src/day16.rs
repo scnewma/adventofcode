@@ -1,7 +1,4 @@
-use std::{
-    cmp::Reverse,
-    collections::{BinaryHeap, HashMap, HashSet},
-};
+use std::collections::BinaryHeap;
 
 use fxhash::{FxHashMap, FxHashSet};
 
@@ -13,79 +10,101 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    let mut grid = HashMap::new();
-    let mut start = (0isize, 0isize);
-    let mut end = (0isize, 0isize);
-    for (r, line) in input.lines().enumerate() {
-        for (c, mut ch) in line.char_indices() {
-            if ch == 'S' {
-                start = (r as isize, c as isize);
-                ch = '.';
-            }
-            if ch == 'E' {
-                end = (r as isize, c as isize);
-                ch = '.';
-            }
-            grid.insert((r as isize, c as isize), ch);
-        }
-    }
+    let (grid, start, end) = parse_input(input);
 
     let mut heap: BinaryHeap<State> = BinaryHeap::new();
     heap.push(State {
         pos: start,
-        dir: Dir::East,
+        dir: 1,
         cost: 0,
-        path: FxHashMap::default(),
+        path: Vec::new(),
     });
-    let mut visited = HashSet::new();
+    let mut visited = FxHashSet::default();
     let mut min = usize::MAX;
     while let Some(State {
         pos,
         dir,
         cost,
-        path,
+        mut path,
     }) = heap.pop()
     {
         if !visited.insert((pos, dir)) || grid.get(&pos).is_none_or(|ch| *ch == '#') {
             continue;
         }
 
-        let mut path = path.clone();
-        path.insert((pos, dir), 0);
+        path.push(pos);
 
         if pos == end {
             min = min.min(cost);
         }
 
-        // moves
-        heap.push(State {
-            pos: dir.move_forward(pos),
-            dir,
-            cost: cost + 1,
-            path: path.clone(),
-        });
-        heap.push(State {
-            pos,
-            dir: dir.turn_clockwise(),
-            cost: cost + 1000,
-            path: path.clone(),
-        });
-        heap.push(State {
-            pos,
-            dir: dir.turn_counter_clockwise(),
-            cost: cost + 1000,
-            path: path.clone(),
-        });
+        for (ndir, costd) in [
+            (dir, 1),
+            (dir.turn_clockwise(), 1001),
+            (dir.turn_counter_clockwise(), 1001),
+        ] {
+            let npos = ndir.move_forward(pos);
+            if grid[&npos] != '#' {
+                heap.push(State::new(npos, ndir, cost + costd, path.clone()));
+            }
+        }
     }
     Ok(min)
 }
 
+// my initial solution was slow (~60s), reimplemented something similar to this solution for
+// improved performance:
+// https://old.reddit.com/r/adventofcode/comments/1hfboft/2024_day_16_solutions/m2cgw50/
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    let min = part01(input)?;
+    let (grid, start, end) = parse_input(input);
 
+    let mut heap: BinaryHeap<State> = BinaryHeap::new();
+    heap.push(State::new(start, 1u8, 0, Vec::new()));
+
+    let mut min = usize::MAX;
+    let mut visited = FxHashMap::default();
+    let mut best_seats = FxHashSet::default();
+    while let Some(State {
+        pos,
+        dir,
+        cost,
+        mut path,
+    }) = heap.pop()
+    {
+        if cost > min {
+            break;
+        }
+        if visited
+            .get(&(pos, dir))
+            .is_some_and(|min_cost| *min_cost < cost)
+        {
+            continue;
+        }
+        visited.insert((pos, dir), cost);
+        path.push(pos);
+        if pos == end {
+            min = cost;
+            for path_pos in &path {
+                best_seats.insert(*path_pos);
+            }
+        }
+
+        for (ndir, costd) in [
+            (dir, 1),
+            (dir.turn_clockwise(), 1001),
+            (dir.turn_counter_clockwise(), 1001),
+        ] {
+            let npos = ndir.move_forward(pos);
+            if grid[&npos] != '#' {
+                heap.push(State::new(npos, ndir, cost + costd, path.clone()));
+            }
+        }
+    }
+    Ok(best_seats.len())
+}
+
+fn parse_input(input: &str) -> (FxHashMap<Pos, char>, Pos, Pos) {
     let mut grid = FxHashMap::default();
-    // let height = input.lines().count();
-    // let width = input.lines().next().unwrap().len();
     let mut start = (0isize, 0isize);
     let mut end = (0isize, 0isize);
     for (r, line) in input.lines().enumerate() {
@@ -101,155 +120,28 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             grid.insert((r as isize, c as isize), ch);
         }
     }
-
-    // TODO: if we implemented dfs directly instead of via binary heap then we wouldn't need to do
-    // some many clones of the path, which should be MUCH faster
-    // Not sure what exactly is incorrect here though...
-    // fn dfs(
-    //     min: usize,
-    //     grid: &FxHashMap<(isize, isize), char>,
-    //     height: isize,
-    //     width: isize,
-    //     pos: (isize, isize),
-    //     dir: Dir,
-    //     cost: usize,
-    //     end_pos: (isize, isize),
-    //     seats: &mut FxHashSet<(isize, isize)>,
-    //     current: &mut FxHashSet<(isize, isize)>,
-    //     min_costs: &mut FxHashMap<((isize, isize), Dir), usize>,
-    // ) {
-    //     if cost > min {
-    //         return;
-    //     }
-    //     if cost == min && pos == end_pos {
-    //         for &pos in current.iter() {
-    //             seats.insert(pos);
-    //         }
-    //         return;
-    //     }
-
-    //     for (pos, dir, dcost) in [
-    //         (dir.move_forward(pos), dir, 0),
-    //         (pos, dir.turn_clockwise(), 1000),
-    //         (pos, dir.turn_counter_clockwise(), 1000),
-    //     ] {
-    //         if grid.get(&pos).is_some_and(|ch| *ch != '#') && !current.contains(&pos) {
-    //             current.insert(pos);
-    //             dfs(
-    //                 min,
-    //                 grid,
-    //                 height,
-    //                 width,
-    //                 pos,
-    //                 dir,
-    //                 cost + dcost + 1,
-    //                 end_pos,
-    //                 seats,
-    //                 current,
-    //                 min_costs,
-    //             );
-    //             current.remove(&pos);
-    //         }
-    //         // if grid.get(&pos).is_none_or(|ch| *ch == '#')
-    //         //     || current.contains(&pos)
-    //         //     || min_costs
-    //         //         .get(&(pos, dir))
-    //         //         .is_some_and(|c| cost + dcost > *c)
-    //         // {
-    //         //     continue;
-    //         // }
-    //     }
-    // }
-
-    // let mut seats = FxHashSet::default();
-    // let mut current = FxHashSet::default();
-    // current.insert(start);
-    // let mut min_costs = FxHashMap::default();
-    // min_costs.insert((start, Dir::East), 0);
-    // dfs(
-    //     min,
-    //     &grid,
-    //     height as isize,
-    //     width as isize,
-    //     start,
-    //     Dir::East,
-    //     0,
-    //     end,
-    //     &mut seats,
-    //     &mut current,
-    //     &mut min_costs,
-    // );
-    // Ok(seats.len())
-
-    let mut heap: BinaryHeap<Reverse<State>> = BinaryHeap::new();
-    heap.push(Reverse(State {
-        pos: start,
-        dir: Dir::East,
-        cost: 0,
-        path: FxHashMap::default(),
-    }));
-    let mut min_costs = FxHashMap::default();
-    let mut best_seats = FxHashSet::default();
-    while let Some(Reverse(State {
-        pos,
-        dir,
-        cost,
-        mut path,
-    })) = heap.pop()
-    {
-        if cost > min
-            || min_costs
-                .get(&(pos, dir))
-                .is_some_and(|min_cost| cost > *min_cost)
-            || path.contains_key(&(pos, dir))
-            || grid.get(&pos).is_none_or(|ch| *ch == '#')
-        {
-            continue;
-        }
-
-        path.insert((pos, dir), cost);
-        min_costs.insert((pos, dir), cost);
-
-        if pos == end && cost == min {
-            for (pos, _) in path.keys() {
-                best_seats.insert(*pos);
-            }
-            continue;
-        }
-
-        // moves
-        if cost < min {
-            heap.push(Reverse(State {
-                pos: dir.move_forward(pos),
-                dir,
-                cost: cost + 1,
-                path: path.clone(),
-            }));
-        }
-        if cost + 1000 <= min {
-            heap.push(Reverse(State {
-                pos,
-                dir: dir.turn_clockwise(),
-                cost: cost + 1000,
-                path: path.clone(),
-            }));
-            heap.push(Reverse(State {
-                pos,
-                dir: dir.turn_counter_clockwise(),
-                cost: cost + 1000,
-                path,
-            }));
-        }
-    }
-    Ok(best_seats.len())
+    (grid, start, end)
 }
+
+type Pos = (isize, isize);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct State {
-    pos: (isize, isize),
-    dir: Dir,
+    pos: Pos,
+    dir: u8,
     cost: usize,
-    path: FxHashMap<((isize, isize), Dir), usize>,
+    path: Vec<Pos>,
+}
+
+impl State {
+    fn new(pos: Pos, dir: u8, cost: usize, path: Vec<Pos>) -> State {
+        State {
+            pos,
+            dir,
+            cost,
+            path,
+        }
+    }
 }
 
 impl Ord for State {
@@ -264,39 +156,28 @@ impl PartialOrd for State {
     }
 }
 
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-enum Dir {
-    North,
-    South,
-    East,
-    West,
+trait Direction {
+    fn move_forward(&self, pos: Pos) -> Pos;
+    fn turn_clockwise(&self) -> Self;
+    fn turn_counter_clockwise(&self) -> Self;
 }
 
-impl Dir {
-    fn move_forward(&self, (r, c): (isize, isize)) -> (isize, isize) {
-        match self {
-            Dir::North => (r - 1, c),
-            Dir::South => (r + 1, c),
-            Dir::East => (r, c + 1),
-            Dir::West => (r, c - 1),
-        }
+impl Direction for u8 {
+    fn move_forward(&self, (r, c): Pos) -> Pos {
+        const DELTAS: [Pos; 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
+        let (dr, dc) = DELTAS[*self as usize];
+        (r + dr, c + dc)
     }
 
-    fn turn_clockwise(&self) -> Dir {
-        match self {
-            Dir::North => Dir::East,
-            Dir::South => Dir::West,
-            Dir::East => Dir::South,
-            Dir::West => Dir::North,
-        }
+    fn turn_clockwise(&self) -> Self {
+        (self + 1) % 4
     }
 
-    fn turn_counter_clockwise(&self) -> Dir {
-        match self {
-            Dir::North => Dir::West,
-            Dir::South => Dir::East,
-            Dir::East => Dir::North,
-            Dir::West => Dir::South,
+    fn turn_counter_clockwise(&self) -> Self {
+        if *self == 0 {
+            3
+        } else {
+            self - 1
         }
     }
 }
@@ -313,7 +194,6 @@ mod tests {
         assert_eq!(109496, ans);
     }
 
-    #[ignore]
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
