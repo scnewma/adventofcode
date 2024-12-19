@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -9,24 +11,45 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     let (patterns, towels) = input.split_once("\n\n").unwrap();
     let patterns: Vec<&str> = patterns.split(", ").collect();
 
-    Ok(towels.lines().filter(|t| is_possible(&patterns, t)).count())
-}
-
-fn is_possible(patterns: &[&str], towel: &str) -> bool {
-    for pattern in patterns {
-        if towel == *pattern {
-            return true;
-        }
-
-        if towel.starts_with(pattern) && is_possible(patterns, &towel[pattern.len()..]) {
-            return true;
-        }
-    }
-    false
+    let mut cache = HashMap::new();
+    Ok(towels
+        .lines()
+        .filter(|t| count_possible(&patterns, t, &mut cache) > 0)
+        .count())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let (patterns, towels) = input.split_once("\n\n").unwrap();
+    let patterns: Vec<&str> = patterns.split(", ").collect();
+
+    let mut cache = HashMap::new();
+    Ok(towels
+        .lines()
+        .map(|t| count_possible(&patterns, t, &mut cache))
+        .sum())
+}
+
+fn count_possible<'a>(
+    patterns: &[&str],
+    towel: &'a str,
+    cache: &mut HashMap<&'a str, usize>,
+) -> usize {
+    if let Some(count) = cache.get(towel) {
+        return *count;
+    }
+
+    let mut count = 0;
+    for pattern in patterns {
+        if towel == *pattern {
+            count += 1;
+        }
+
+        if towel.ends_with(pattern) {
+            count += count_possible(patterns, &towel[..towel.len() - pattern.len()], cache);
+        }
+    }
+    cache.insert(towel, count);
+    count
 }
 
 #[cfg(test)]
