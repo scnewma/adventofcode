@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use fxhash::FxHashMap;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -11,10 +11,9 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     let (patterns, towels) = input.split_once("\n\n").unwrap();
     let patterns: Vec<&str> = patterns.split(", ").collect();
 
-    let mut cache = HashMap::new();
     Ok(towels
         .lines()
-        .filter(|t| count_possible(&patterns, t, &mut cache) > 0)
+        .filter(|t| count_possible(&patterns, t, &mut FxHashMap::default()) > 0)
         .count())
 }
 
@@ -22,17 +21,16 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     let (patterns, towels) = input.split_once("\n\n").unwrap();
     let patterns: Vec<&str> = patterns.split(", ").collect();
 
-    let mut cache = HashMap::new();
     Ok(towels
         .lines()
-        .map(|t| count_possible(&patterns, t, &mut cache))
+        .map(|t| count_possible(&patterns, t, &mut FxHashMap::default()))
         .sum())
 }
 
 fn count_possible<'a>(
     patterns: &[&str],
     towel: &'a str,
-    cache: &mut HashMap<&'a str, usize>,
+    cache: &mut FxHashMap<&'a str, usize>,
 ) -> usize {
     if let Some(count) = cache.get(towel) {
         return *count;
@@ -61,12 +59,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(296, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(619970556776002, ans);
     }
 }
