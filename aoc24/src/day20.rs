@@ -22,7 +22,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     // adding the cost to get to the neighboring open tile taken from the overall shortest path
     // cost.
     for pos in grid.keys() {
-        if grid[&pos] == '#' || costs[&pos] > min_cost {
+        if grid[pos] == '#' || costs[pos] > min_cost {
             continue;
         }
 
@@ -31,7 +31,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
             let nneighbor = (pos.0 + dr * 2, pos.1 + dc * 2);
             if grid[&neighbor] == '#' && grid.get(&nneighbor).is_some_and(|ch| *ch == '.') {
                 let neighbor_cost_to_end = min_cost - costs[&nneighbor];
-                let cheated_cost = neighbor_cost_to_end + costs[&pos] + 2;
+                let cheated_cost = neighbor_cost_to_end + costs[pos] + 2;
                 if cheated_cost < min_cost && min_cost - cheated_cost >= 100 {
                     worthwhile_cheats += 1;
                 }
@@ -52,7 +52,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     // check every non-wall position in the grid, check every cell within 20 moves to see if moving
     // directly to that cell (crow's path) would be faster.
     for pos in grid.keys() {
-        if grid[&pos] == '#' || costs[&pos] > min_cost {
+        if grid[pos] == '#' || costs[pos] > min_cost {
             continue;
         }
 
@@ -65,7 +65,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             }
             if grid[&cheat_pos] == '.' {
                 let cost_to_end = min_cost - costs[&cheat_pos];
-                let cheated_cost = cost_to_end + costs[&pos] + (20 - cheat_rem);
+                let cheated_cost = cost_to_end + costs[pos] + (20 - cheat_rem);
                 if cheated_cost < min_cost && min_cost - cheated_cost >= 100 {
                     worthwhile_cheats += 1;
                 }
@@ -74,7 +74,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             if cheat_rem > 0 {
                 for (dr, dc) in crate::DELTAS4 {
                     let neighbor = (cheat_pos.0 + dr, cheat_pos.1 + dc);
-                    if grid.get(&neighbor).is_none() {
+                    if !grid.contains_key(&neighbor) {
                         continue;
                     }
 
@@ -91,7 +91,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
 fn shortest_path_costs(grid: &FxHashMap<Pos, char>, start: Pos, end: Pos) -> FxHashMap<Pos, usize> {
     let mut costs = FxHashMap::default();
     for pos in grid.keys() {
-        if grid[&pos] == '#' {
+        if grid[pos] == '#' {
             continue;
         }
         costs.insert(*pos, usize::MAX);

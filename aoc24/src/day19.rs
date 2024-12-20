@@ -42,8 +42,8 @@ fn count_possible<'a>(
             count += 1;
         }
 
-        if towel.ends_with(pattern) {
-            count += count_possible(patterns, &towel[..towel.len() - pattern.len()], cache);
+        if let Some(rem) = towel.strip_suffix(pattern) {
+            count += count_possible(patterns, rem, cache);
         }
     }
     cache.insert(towel, count);
