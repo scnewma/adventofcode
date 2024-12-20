@@ -1,7 +1,6 @@
 use std::collections::{BinaryHeap, VecDeque};
 
 use fxhash::{FxHashMap, FxHashSet};
-use itertools::Itertools;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -12,42 +11,16 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let (grid, start, end) = parse_input(input);
-
-    let mut costs = FxHashMap::default();
-    for pos in grid.keys() {
-        if grid[&pos] == '#' {
-            continue;
-        }
-        costs.insert(*pos, usize::MAX);
-    }
-    costs.insert(start, 0);
-
-    let mut heap = BinaryHeap::<State>::new();
-    heap.push(State::new(start, 0));
-    while let Some(State { pos, cost }) = heap.pop() {
-        if cost > costs[&pos] {
-            continue;
-        }
-
-        costs.insert(pos, cost);
-
-        if pos == end {
-            continue;
-        }
-
-        for (dr, dc) in crate::DELTAS4 {
-            let npos = (pos.0 + dr, pos.1 + dc);
-            if grid.get(&npos).is_none_or(|ch| *ch == '#') {
-                continue;
-            }
-
-            heap.push(State::new(npos, cost + 1));
-        }
-    }
+    let costs = shortest_path_costs(&grid, start, end);
 
     let min_cost = costs[&end];
-    let mut costs_saved = Vec::new();
+    let mut worthwhile_cheats = 0;
 
+    // check every non-wall position in the grid, if it's neighbor is a wall followed by an open
+    // tile then we could cheat and move there directly.
+    // we can calculate the distance with the costs map by taking the cost to get to this key and
+    // adding the cost to get to the neighboring open tile taken from the overall shortest path
+    // cost.
     for pos in grid.keys() {
         if grid[&pos] == '#' || costs[&pos] > min_cost {
             continue;
@@ -59,19 +32,63 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
             if grid[&neighbor] == '#' && grid.get(&nneighbor).is_some_and(|ch| *ch == '.') {
                 let neighbor_cost_to_end = min_cost - costs[&nneighbor];
                 let cheated_cost = neighbor_cost_to_end + costs[&pos] + 2;
-                if cheated_cost < min_cost {
-                    costs_saved.push(min_cost - cheated_cost);
+                if cheated_cost < min_cost && min_cost - cheated_cost >= 100 {
+                    worthwhile_cheats += 1;
                 }
             }
         }
     }
 
-    Ok(costs_saved.iter().filter(|cost| **cost >= 100).count())
+    Ok(worthwhile_cheats)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
     let (grid, start, end) = parse_input(input);
+    let costs = shortest_path_costs(&grid, start, end);
 
+    let min_cost = costs[&end];
+    let mut worthwhile_cheats = 0;
+
+    // check every non-wall position in the grid, check every cell within 20 moves to see if moving
+    // directly to that cell (crow's path) would be faster.
+    for pos in grid.keys() {
+        if grid[&pos] == '#' || costs[&pos] > min_cost {
+            continue;
+        }
+
+        let mut visited = FxHashSet::default();
+        let mut q = VecDeque::new();
+        q.push_back((*pos, 20));
+        while let Some((cheat_pos, cheat_rem)) = q.pop_front() {
+            if !visited.insert(cheat_pos) {
+                continue;
+            }
+            if grid[&cheat_pos] == '.' {
+                let cost_to_end = min_cost - costs[&cheat_pos];
+                let cheated_cost = cost_to_end + costs[&pos] + (20 - cheat_rem);
+                if cheated_cost < min_cost && min_cost - cheated_cost >= 100 {
+                    worthwhile_cheats += 1;
+                }
+            }
+
+            if cheat_rem > 0 {
+                for (dr, dc) in crate::DELTAS4 {
+                    let neighbor = (cheat_pos.0 + dr, cheat_pos.1 + dc);
+                    if grid.get(&neighbor).is_none() {
+                        continue;
+                    }
+
+                    q.push_back((neighbor, cheat_rem - 1));
+                }
+            }
+        }
+    }
+
+    Ok(worthwhile_cheats)
+}
+
+// dijkstra
+fn shortest_path_costs(grid: &FxHashMap<Pos, char>, start: Pos, end: Pos) -> FxHashMap<Pos, usize> {
     let mut costs = FxHashMap::default();
     for pos in grid.keys() {
         if grid[&pos] == '#' {
@@ -103,48 +120,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             heap.push(State::new(npos, cost + 1));
         }
     }
-
-    let min_cost = costs[&end];
-    let mut cheats = FxHashMap::default();
-
-    for pos in grid.keys() {
-        if grid[&pos] == '#' || costs[&pos] > min_cost {
-            continue;
-        }
-
-        let mut visited = FxHashSet::default();
-        let mut q = VecDeque::new();
-        q.push_back((*pos, 20, false));
-        while let Some((cheat_pos, cheat_rem, actually_cheated)) = q.pop_front() {
-            if !visited.insert(cheat_pos) {
-                continue;
-            }
-            if actually_cheated && grid[&cheat_pos] == '.' {
-                let cost_to_end = min_cost - costs[&cheat_pos];
-                let cheated_cost = cost_to_end + costs[&pos] + (20 - cheat_rem);
-                if cheated_cost < min_cost && min_cost - cheated_cost >= 50 {
-                    cheats.insert((pos, cheat_pos), min_cost - cheated_cost);
-                }
-            }
-
-            if cheat_rem > 0 {
-                for (dr, dc) in crate::DELTAS4 {
-                    let neighbor = (cheat_pos.0 + dr, cheat_pos.1 + dc);
-                    if grid.get(&neighbor).is_none() {
-                        continue;
-                    }
-
-                    q.push_back((
-                        neighbor,
-                        cheat_rem - 1,
-                        actually_cheated || grid[&cheat_pos] == '#',
-                    ));
-                }
-            }
-        }
-    }
-
-    Ok(cheats.values().filter(|cost| **cost >= 100).count())
+    costs
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -172,12 +148,6 @@ impl PartialOrd for State {
 }
 
 type Pos = (isize, isize);
-
-// manhattan distance
-#[inline]
-fn distance(a: Pos, b: Pos) -> usize {
-    a.0.abs_diff(b.0) + a.1.abs_diff(b.1)
-}
 
 fn parse_input(input: &str) -> (FxHashMap<Pos, char>, Pos, Pos) {
     let mut grid = FxHashMap::default();
@@ -207,12 +177,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1518, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1032257, ans);
     }
 }
