@@ -26,17 +26,15 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
             continue;
         }
 
-        for (dr, dc) in crate::DELTAS4 {
-            let neighbor = (pos.0 + dr, pos.1 + dc);
-            let nneighbor = (pos.0 + dr * 2, pos.1 + dc * 2);
-            if grid[&neighbor] == '#' && grid.get(&nneighbor).is_some_and(|ch| *ch == '.') {
-                let neighbor_cost_to_end = min_cost - costs[&nneighbor];
-                let cheated_cost = neighbor_cost_to_end + costs[pos] + 2;
-                if cheated_cost < min_cost && min_cost - cheated_cost >= 100 {
-                    worthwhile_cheats += 1;
-                }
-            }
-        }
+        worthwhile_cheats += crate::DELTAS4
+            .iter()
+            .map(|(dr, dc)| (pos.0 + dr * 2, pos.1 + dc * 2))
+            .filter(|nneighbor| {
+                grid.get(nneighbor).is_some_and(|ch| *ch == '.')
+                    // +2 to account for the moves to get to the neighbor
+                    && costs[pos].saturating_sub(costs[nneighbor]) >= 102
+            })
+            .count();
     }
 
     Ok(worthwhile_cheats)
@@ -63,23 +61,21 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
             if !visited.insert(cheat_pos) {
                 continue;
             }
-            if grid[&cheat_pos] == '.' {
-                let cost_to_end = min_cost - costs[&cheat_pos];
-                let cheated_cost = cost_to_end + costs[pos] + (20 - cheat_rem);
-                if cheated_cost < min_cost && min_cost - cheated_cost >= 100 {
-                    worthwhile_cheats += 1;
-                }
+            if grid[&cheat_pos] == '.'
+                // + (20-cheat_rem) to account for movement to get to this position
+                && costs[pos].saturating_sub(costs[&cheat_pos]) >= 120 - cheat_rem
+            {
+                worthwhile_cheats += 1;
             }
 
             if cheat_rem > 0 {
-                for (dr, dc) in crate::DELTAS4 {
-                    let neighbor = (cheat_pos.0 + dr, cheat_pos.1 + dc);
-                    if !grid.contains_key(&neighbor) {
-                        continue;
-                    }
-
-                    q.push_back((neighbor, cheat_rem - 1));
-                }
+                crate::DELTAS4
+                    .iter()
+                    .map(|(dr, dc)| (cheat_pos.0 + dr, cheat_pos.1 + dc))
+                    .filter(|neighbor| grid.contains_key(neighbor))
+                    .for_each(|neighbor| {
+                        q.push_back((neighbor, cheat_rem - 1));
+                    });
             }
         }
     }
@@ -111,14 +107,13 @@ fn shortest_path_costs(grid: &FxHashMap<Pos, char>, start: Pos, end: Pos) -> FxH
             continue;
         }
 
-        for (dr, dc) in crate::DELTAS4 {
-            let npos = (pos.0 + dr, pos.1 + dc);
-            if grid.get(&npos).is_none_or(|ch| *ch == '#') {
-                continue;
-            }
-
-            heap.push(State::new(npos, cost + 1));
-        }
+        crate::DELTAS4
+            .iter()
+            .map(|(dr, dc)| (pos.0 + dr, pos.1 + dc))
+            .filter(|npos| grid.get(npos).is_some_and(|ch| *ch != '#'))
+            .for_each(|npos| {
+                heap.push(State::new(npos, cost + 1));
+            });
     }
     costs
 }
