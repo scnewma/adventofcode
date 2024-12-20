@@ -70,7 +70,81 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let (grid, start, end) = parse_input(input);
+
+    let mut costs = FxHashMap::default();
+    for pos in grid.keys() {
+        if grid[&pos] == '#' {
+            continue;
+        }
+        costs.insert(*pos, usize::MAX);
+    }
+    costs.insert(start, 0);
+
+    let mut heap = BinaryHeap::<State>::new();
+    heap.push(State::new(start, 0));
+    while let Some(State { pos, cost }) = heap.pop() {
+        if cost > costs[&pos] {
+            continue;
+        }
+
+        costs.insert(pos, cost);
+
+        if pos == end {
+            continue;
+        }
+
+        for (dr, dc) in crate::DELTAS4 {
+            let npos = (pos.0 + dr, pos.1 + dc);
+            if grid.get(&npos).is_none_or(|ch| *ch == '#') {
+                continue;
+            }
+
+            heap.push(State::new(npos, cost + 1));
+        }
+    }
+
+    let min_cost = costs[&end];
+    let mut cheats = FxHashMap::default();
+
+    for pos in grid.keys() {
+        if grid[&pos] == '#' || costs[&pos] > min_cost {
+            continue;
+        }
+
+        let mut visited = FxHashSet::default();
+        let mut q = VecDeque::new();
+        q.push_back((*pos, 20, false));
+        while let Some((cheat_pos, cheat_rem, actually_cheated)) = q.pop_front() {
+            if !visited.insert(cheat_pos) {
+                continue;
+            }
+            if actually_cheated && grid[&cheat_pos] == '.' {
+                let cost_to_end = min_cost - costs[&cheat_pos];
+                let cheated_cost = cost_to_end + costs[&pos] + (20 - cheat_rem);
+                if cheated_cost < min_cost && min_cost - cheated_cost >= 50 {
+                    cheats.insert((pos, cheat_pos), min_cost - cheated_cost);
+                }
+            }
+
+            if cheat_rem > 0 {
+                for (dr, dc) in crate::DELTAS4 {
+                    let neighbor = (cheat_pos.0 + dr, cheat_pos.1 + dc);
+                    if grid.get(&neighbor).is_none() {
+                        continue;
+                    }
+
+                    q.push_back((
+                        neighbor,
+                        cheat_rem - 1,
+                        actually_cheated || grid[&cheat_pos] == '#',
+                    ));
+                }
+            }
+        }
+    }
+
+    Ok(cheats.values().filter(|cost| **cost >= 100).count())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -98,6 +172,12 @@ impl PartialOrd for State {
 }
 
 type Pos = (isize, isize);
+
+// manhattan distance
+#[inline]
+fn distance(a: Pos, b: Pos) -> usize {
+    a.0.abs_diff(b.0) + a.1.abs_diff(b.1)
+}
 
 fn parse_input(input: &str) -> (FxHashMap<Pos, char>, Pos, Pos) {
     let mut grid = FxHashMap::default();
