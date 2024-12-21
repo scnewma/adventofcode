@@ -17,6 +17,10 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     Ok(solve(input, 25))
 }
 
+// the general idea is to start from the human operator and calculate the costs for the next keypad
+// to push a specific button. we can then repeat that for every keypad until the numerical keypad.
+// this approach prevents us from calculating any recursive paths as we only need to know the
+// projected cost to make a move between two points at a given depth.
 fn solve(input: &str, num_robots: usize) -> usize {
     let codes: Vec<&str> = input.lines().collect();
 
