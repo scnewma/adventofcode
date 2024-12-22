@@ -1,7 +1,4 @@
-use std::collections::VecDeque;
-
-use fxhash::FxHashMap;
-use itertools::Itertools;
+use fxhash::{FxHashMap, FxHashSet};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -12,69 +9,51 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let secret_numbers = input.lines().map(|line| line.parse::<usize>().unwrap());
-    let mut sum = 0;
-    for mut secret_number in secret_numbers {
-        for _ in 0..2000 {
-            let a = secret_number * 64;
-            secret_number ^= a;
-            secret_number %= 16777216;
-
-            let b = secret_number / 32;
-            secret_number ^= b;
-            secret_number %= 16777216;
-
-            let c = secret_number * 2048;
-            secret_number ^= c;
-            secret_number %= 16777216;
-        }
-        sum += secret_number;
-    }
-    Ok(sum)
+    Ok(secret_numbers
+        .map(|secret_number| {
+            (0..2000).fold(secret_number, |secret_number, _| {
+                next_secret_number(secret_number)
+            })
+        })
+        .sum())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
     let secret_numbers = input.lines().map(|line| line.parse::<usize>().unwrap());
 
-    let mut change_seq_prices = FxHashMap::<(isize, isize, isize, isize), usize>::default();
+    let mut change_seq_prices = FxHashMap::default();
 
-    for (_, mut secret_number) in secret_numbers.enumerate() {
-        let mut first_sell = FxHashMap::<(isize, isize, isize, isize), usize>::default();
-        let mut price_changes = VecDeque::new();
+    let mut seen = FxHashSet::default();
+    for mut secret_number in secret_numbers {
+        seen.clear();
+
+        let mut price_changes = (0isize, 0isize, 0isize, 0isize);
         let mut prev_price = secret_number % 10;
-        for _ in 0..2000 {
-            let a = secret_number * 64;
-            secret_number ^= a;
-            secret_number %= 16777216;
-
-            let b = secret_number / 32;
-            secret_number ^= b;
-            secret_number %= 16777216;
-
-            let c = secret_number * 2048;
-            secret_number ^= c;
-            secret_number %= 16777216;
+        for i in 0..2000 {
+            secret_number = next_secret_number(secret_number);
 
             let price = secret_number % 10;
-            price_changes.push_back(price as isize - prev_price as isize);
-            if price_changes.len() > 4 {
-                price_changes.pop_front();
-            }
-            if let Some((a, b, c, d)) = price_changes.iter().collect_tuple() {
-                if !first_sell.contains_key(&(*a, *b, *c, *d)) {
-                    first_sell.insert((*a, *b, *c, *d), price);
-                }
+            let change = price as isize - prev_price as isize;
+            price_changes = (price_changes.1, price_changes.2, price_changes.3, change);
+
+            if i > 3 && seen.insert(price_changes) {
+                change_seq_prices
+                    .entry(price_changes)
+                    .and_modify(|e| *e += price)
+                    .or_insert(price);
             }
             prev_price = price;
         }
-        for (k, v) in first_sell {
-            change_seq_prices
-                .entry(k)
-                .and_modify(|e| *e += v)
-                .or_insert(v);
-        }
     }
 
-    return Ok(*change_seq_prices.values().max().unwrap());
+    Ok(*change_seq_prices.values().max().unwrap())
+}
+
+#[inline]
+fn next_secret_number(mut secret_number: usize) -> usize {
+    secret_number = secret_number ^ ((secret_number * 64) % 16777216);
+    secret_number = secret_number ^ ((secret_number / 32) % 16777216);
+    secret_number ^ ((secret_number * 2048) % 16777216)
 }
 
 #[cfg(test)]
