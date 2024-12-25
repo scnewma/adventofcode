@@ -1,6 +1,4 @@
-use std::collections::HashSet;
-
-use itertools::Itertools;
+use itertools::{iproduct, Either};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -10,41 +8,27 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    let mut locks = HashSet::<[usize; 5]>::new();
-    let mut keys = HashSet::<[usize; 5]>::new();
+    let mut locks = Vec::<[usize; 5]>::new();
+    let mut keys = Vec::<[usize; 5]>::new();
     for schematic in input.split("\n\n") {
-        let mut schem = schematic.to_string();
-        let mut heights = [0usize; 5];
-        let is_lock = schematic.starts_with('#');
-        if !is_lock {
-            schem = schematic.lines().rev().join("\n");
-        }
-
-        for line in schem.lines().skip(1) {
-            for (i, ch) in line.char_indices() {
-                if ch == '#' {
-                    heights[i] += 1;
-                }
-            }
-        }
-
-        if is_lock {
-            locks.insert(heights);
+        let (locks_or_keys, lines) = if schematic.starts_with('#') {
+            (&mut locks, Either::Left(schematic.lines()))
         } else {
-            keys.insert(heights);
-        }
+            (&mut keys, Either::Right(schematic.lines().rev()))
+        };
+
+        let mut heights = [0usize; 5];
+        lines
+            .skip(1)
+            .flat_map(|line| line.char_indices())
+            .for_each(|(col, ch)| heights[col] += (ch == '#') as usize);
+
+        locks_or_keys.push(heights);
     }
 
-    let mut ans = 0;
-    for lock in &locks {
-        for key in &keys {
-            if lock.iter().enumerate().all(|(i, lh)| lh + key[i] <= 5) {
-                ans += 1;
-            }
-        }
-    }
-
-    Ok(ans)
+    Ok(iproduct!(locks, keys)
+        .filter(|(lock, key)| lock.iter().enumerate().all(|(i, lh)| lh + key[i] <= 5))
+        .count())
 }
 
 pub fn part02(_input: &str) -> anyhow::Result<usize> {

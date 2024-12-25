@@ -40,4 +40,4 @@ Benchmarks can be ran with `cargo bench`.
 | 22  | 6.1421 ms | 33.388 ms |
 | 23  | 470.25 µs | 1.1140 ms |
 | 24  | - | - |
-| 25  | - |           |
+| 25  | 150.36 µs |           |
