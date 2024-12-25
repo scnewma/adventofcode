@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+YEAR="$1"
+DAY="$2"
+
+function no_session_cookie {
+    echo "No session cookie found!"
+    echo "Create config.json file with session_cookie key."
+    exit 1
+}
+
+if [ -z "$YEAR" ]; then
+    echo "Must provide -y for year."
+    exit 1
+fi
+
+if [ -z "$DAY" ]; then
+    echo "Must provide -d for day."
+    exit 1
+fi
+
+[ ! -f config.json ] && no_session_cookie
+
+SESSION_COOKIE="$(jq -r '.session_cookie // ""' < config.json)"
+[ -z "$SESSION_COOKIE" ] && no_session_cookie
+
+OUT_DIR="aoc${YEAR:(-2)}/inputs"
+mkdir -p $OUT_DIR
+OUT="$OUT_DIR/day$(printf '%02d' "$DAY").input.txt"
+curl -s --cookie "session=$SESSION_COOKIE" "https://adventofcode.com/$YEAR/day/$DAY/input" > "$OUT"
