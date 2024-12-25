@@ -16,13 +16,16 @@ if (( HOUR >= 21 )); then
 fi
 
 FNAME="input"
-while getopts ":ed:" opt; do
+while getopts ":edy:" opt; do
     case $opt in
         e)
             FNAME="example"
             ;;
         d)
             DAY="$OPTARG"
+            ;;
+        y)
+            YEAR="$OPTARG"
             ;;
         \?)
             echo "Unknown option"

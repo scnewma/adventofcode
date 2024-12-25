@@ -93,6 +93,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc21"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arrayvec",
+ "bittle 0.6.0",
+ "bytes",
+ "clap 4.3.11",
+ "criterion",
+ "edit-distance",
+ "fxhash",
+ "itertools",
+ "num",
+ "polyfit-rs",
+ "rayon",
+ "regex",
+ "rstest",
+ "string-interner",
+]
+
+[[package]]
 name = "aoc22"
 version = "0.1.0"
 dependencies = [
@@ -235,6 +256,12 @@ name = "byteorder"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
+
+[[package]]
+name = "bytes"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
 
 [[package]]
 name = "cast"
