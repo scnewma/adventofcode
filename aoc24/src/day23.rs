@@ -66,7 +66,7 @@ fn maximal_clique_pivot(
     p: &mut FxHashSet<SymbolU32>,
     x: &mut FxHashSet<SymbolU32>,
 ) -> FxHashSet<SymbolU32> {
-    if p.len() == 0 && x.len() == 0 {
+    if p.is_empty() && x.is_empty() {
         return r.clone();
     }
 
