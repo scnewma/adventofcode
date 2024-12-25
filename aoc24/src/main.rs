@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
         day22::run,
         day23::run,
         day24::run,
-        // day25::run,
+        day25::run,
     ];
 
     if cli.day > days.len() {

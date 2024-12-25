@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::Write;
-
 use bittle::Bits;
 use fxhash::FxHashMap;
 use itertools::Itertools;
@@ -127,11 +124,11 @@ pub fn part02(input: &str) -> anyhow::Result<String> {
         })
         .collect();
 
-    let mut file = File::create("./aoc24/src/day24.dot")?;
+    // let mut file = File::create("./aoc24/src/day24.dot")?;
 
     let mut topsort = TopSort::default();
     let mut ops: FxHashMap<&str, (&str, &str, &str)> = FxHashMap::default();
-    writeln!(&mut file, "digraph G {{")?;
+    // writeln!(&mut file, "digraph G {{")?;
     for gate in &gates {
         let out = swaps.get(gate.3).cloned().unwrap_or(gate.3);
 
@@ -142,17 +139,17 @@ pub fn part02(input: &str) -> anyhow::Result<String> {
             "duplicate output wire :: out = {out}"
         );
         ops.insert(out, (gate.0, gate.1, gate.2));
-        let color = match gate.1 {
-            "AND" => "green",
-            "OR" => "blue",
-            "XOR" => "red",
-            _ => unreachable!(),
-        };
-        writeln!(&mut file, "{} [color = {}]", out, color)?;
-        writeln!(&mut file, "{} -> {};", gate.0, out)?;
-        writeln!(&mut file, "{} -> {};", gate.2, out)?;
+        // let color = match gate.1 {
+        //     "AND" => "green",
+        //     "OR" => "blue",
+        //     "XOR" => "red",
+        //     _ => unreachable!(),
+        // };
+        // writeln!(&mut file, "{} [color = {}]", out, color)?;
+        // writeln!(&mut file, "{} -> {};", gate.0, out)?;
+        // writeln!(&mut file, "{} -> {};", gate.2, out)?;
     }
-    writeln!(&mut file, "}}")?;
+    // writeln!(&mut file, "}}")?;
 
     let x = decode(&wires, 'x');
     let y = decode(&wires, 'y');
