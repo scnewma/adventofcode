@@ -4,13 +4,15 @@ set -euo pipefail
 INPUT="$1"
 DAY="$(printf '%02d' "$INPUT")"
 
-sed -i "" -e "s%// pub mod day$DAY;%pub mod day$DAY;%" aoc24/src/lib.rs
-sed -i "" -e "s%// day$DAY::run,%day$DAY::run,%" aoc24/src/main.rs
+PKG="aoc21"
 
-touch "aoc24/inputs/day$DAY.example.txt"
-touch "aoc24/inputs/day$DAY.input.txt"
+sed -i "" -e "s%// pub mod day$DAY;%pub mod day$DAY;%" $PKG/src/lib.rs
+sed -i "" -e "s%// day$DAY::run,%day$DAY::run,%" $PKG/src/main.rs
 
-cat << EOF > "aoc24/src/day$DAY.rs"
+touch "$PKG/inputs/day$DAY.example.txt"
+touch "$PKG/inputs/day$DAY.input.txt"
+
+cat << EOF > "$PKG/src/day$DAY.rs"
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -56,6 +58,6 @@ while (( i <= INPUT )); do
     i=$((i + 1))
 done
 GEN_BENCHES_LINE="${GEN_BENCHES_LINE}];"
-sed -i "" -e "s/gen_benches!\[.*\];/$GEN_BENCHES_LINE/" aoc24/benches/bench.rs
+sed -i "" -e "s/gen_benches!\[.*\];/$GEN_BENCHES_LINE/" $PKG/benches/bench.rs
 
 cargo fmt

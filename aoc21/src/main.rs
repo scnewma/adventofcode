@@ -21,6 +21,14 @@ mod day14;
 mod day15;
 mod day16;
 mod day17;
+mod day18;
+// mod day19;
+// mod day20;
+// mod day21;
+// mod day22;
+// mod day23;
+// mod day24;
+// mod day25;
 
 #[derive(Parser)]
 struct Cli {
@@ -48,6 +56,14 @@ fn main() -> anyhow::Result<()> {
         day15::run,
         day16::run,
         day17::run,
+        day18::run,
+        // day19::run,
+        // day20::run,
+        // day21::run,
+        // day22::run,
+        // day23::run,
+        // day24::run,
+        // day25::run,
     ];
 
     let input = std::io::read_to_string(std::io::stdin()).context("could not read stdin")?;
