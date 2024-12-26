@@ -1,5 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
+use itertools::Itertools;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -8,21 +10,38 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    let mut lines = input.lines();
-    let mut number: Number = lines.next().unwrap().parse()?;
-    for line in lines {
-        let other: Number = line.parse()?;
-        number = number.add(other);
-        number.reduce();
-    }
-    Ok(number.magnitude())
+    let complete = input
+        .lines()
+        .flat_map(Number::from_str)
+        .reduce(|acc, next| {
+            let mut n = acc.add(next);
+            n.reduce();
+            n
+        })
+        .unwrap();
+    Ok(complete.magnitude())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    Ok(input
+        .lines()
+        .flat_map(Number::from_str)
+        .permutations(2)
+        .map(|pair| {
+            pair.into_iter()
+                .reduce(|acc, next| {
+                    let mut n = acc.add(next);
+                    n.reduce();
+                    n
+                })
+                .unwrap()
+        })
+        .map(|n| n.magnitude())
+        .max()
+        .unwrap())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Number {
     Literal(usize),
     Pair(Box<Number>, Box<Number>),
@@ -193,13 +212,13 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(3305, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(4563, ans);
     }
 
     #[rstest]
