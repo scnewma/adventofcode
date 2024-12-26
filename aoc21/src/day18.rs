@@ -194,7 +194,7 @@ fn parse_number_impl(s: &str) -> (usize, Number) {
             )
         }
         '0'..='9' => {
-            let end = s.find(&[',', ']']).unwrap();
+            let end = s.find([',', ']']).unwrap();
             let n: usize = s[..end].parse().unwrap();
             (end, Number::Literal(n))
         }
@@ -265,7 +265,7 @@ mod tests {
     #[case("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", 1384)]
     #[case("[[[[1,1],[2,2]],[3,3]],[4,4]]", 445)]
     #[case("[[[[3,0],[5,3]],[4,4]],[5,5]]", 791)]
-    #[case("[[[[5,0],[7,4]],[5,5]],[6,6]]", 1139)]
+    #[case("[[[[5,0],[7,4]],[5,5]],[6,6]]", 1137)]
     #[case("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]", 3488)]
     fn test_magnitude(#[case] number: &str, #[case] expected: usize) {
         let number = parse_number(number);
