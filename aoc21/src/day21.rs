@@ -1,5 +1,6 @@
 use arrayvec::ArrayVec;
-use itertools::Itertools;
+use fxhash::FxHashMap;
+use itertools::iproduct;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -11,37 +12,96 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 const PLAYERS: usize = 2;
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    let mut positions: ArrayVec<usize, PLAYERS> = input
+    let mut positions = input
         .lines()
-        .map(|line| line.split_whitespace().last().unwrap().parse().unwrap())
-        .collect();
+        .map(|line| line.split_whitespace().last().unwrap().parse().unwrap());
 
-    let mut scores = ArrayVec::<_, PLAYERS>::from_iter([0usize; 2]);
+    let mut players = [
+        Player::new(positions.next().unwrap()),
+        Player::new(positions.next().unwrap()),
+    ];
 
-    let mut dice = (1..=100).cycle();
     let mut rolls = 0;
 
-    'outer: loop {
-        for pid in 0..PLAYERS {
-            let (r1, r2, r3) = dice.next_tuple().unwrap();
-            let total_roll = r1 + r2 + r3;
-            rolls += 3;
-            let next_position = (positions[pid] + total_roll - 1) % 10 + 1;
-            scores[pid] += next_position;
-            positions[pid] = next_position;
-
-            if scores[pid] >= 1000 {
-                break 'outer;
-            }
+    for pid in (0..PLAYERS).cycle() {
+        let triple_roll = 3 * rolls + 6;
+        players[pid] = players[pid].advance(triple_roll);
+        rolls += 3;
+        if players[pid].score >= 1000 {
+            break;
         }
     }
 
-    let min_score = scores.iter().min().unwrap();
+    let min_score = players.iter().map(|p| p.score).min().unwrap();
     Ok(min_score * rolls)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let positions: ArrayVec<usize, PLAYERS> = input
+        .lines()
+        .map(|line| line.split_whitespace().last().unwrap().parse().unwrap())
+        .collect();
+
+    // there are 27 different universes generated after 3 dice rolls. this precomputes those
+    // possible rolls and how many universes generated the same sum of 3 dice rolls
+    let mut dice_roll_universes = FxHashMap::<usize, usize>::default();
+    for (i, j, k) in iproduct!(1..=3, 1..=3, 1..=3) {
+        *dice_roll_universes.entry(i + j + k).or_default() += 1;
+    }
+
+    fn inner(
+        dice_roll_universes: &FxHashMap<usize, usize>,
+        cache: &mut FxHashMap<(Player, Player), (usize, usize)>,
+        player1: Player,
+        player2: Player,
+    ) -> (usize, usize) {
+        if let Some(ans) = cache.get(&(player1, player2)) {
+            return *ans;
+        }
+
+        const WINNING_SCORE: usize = 21;
+        if player2.score >= WINNING_SCORE {
+            return (0, 1);
+        }
+
+        let (mut p1wins, mut p2wins) = (0, 0);
+        for (roll, universes_with_roll) in dice_roll_universes {
+            let (wins2, wins1) = inner(dice_roll_universes, cache, player2, player1.advance(*roll));
+            p1wins += wins1 * universes_with_roll;
+            p2wins += wins2 * universes_with_roll;
+        }
+
+        cache.insert((player1, player2), (p1wins, p2wins));
+        (p1wins, p2wins)
+    }
+
+    let (p1wins, p2wins) = inner(
+        &dice_roll_universes,
+        &mut FxHashMap::default(),
+        Player::new(positions[0]),
+        Player::new(positions[1]),
+    );
+    Ok(p1wins.max(p2wins))
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+struct Player {
+    position: usize,
+    score: usize,
+}
+
+impl Player {
+    fn new(position: usize) -> Self {
+        Self { position, score: 0 }
+    }
+
+    fn advance(&self, roll: usize) -> Self {
+        let next_position = (self.position + roll - 1) % 10 + 1;
+        Self {
+            position: next_position,
+            score: self.score + next_position,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -59,6 +119,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(630797200227453, ans);
     }
 }
