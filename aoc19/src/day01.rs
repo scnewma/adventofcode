@@ -6,11 +6,32 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    Ok(input
+        .lines()
+        .map(|line| {
+            let mass: usize = line.parse().unwrap();
+            mass / 3 - 2
+        })
+        .sum())
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    fn fuel_req(mass: usize) -> usize {
+        let fuel = (mass / 3).saturating_sub(2);
+        if fuel == 0 {
+            0
+        } else {
+            fuel + fuel_req(fuel)
+        }
+    }
+
+    Ok(input
+        .lines()
+        .map(|line| {
+            let mass: usize = line.parse().unwrap();
+            fuel_req(mass)
+        })
+        .sum())
 }
 
 #[cfg(test)]
@@ -22,12 +43,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(3464458, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(5193796, ans);
     }
 }
