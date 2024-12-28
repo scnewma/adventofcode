@@ -1,4 +1,3 @@
-use arrayvec::ArrayVec;
 use fxhash::FxHashMap;
 use itertools::iproduct;
 
@@ -8,8 +7,6 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
         part02: part02(input)?.to_string(),
     })
 }
-
-const PLAYERS: usize = 2;
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let mut positions = input
@@ -23,7 +20,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 
     let mut rolls = 0;
 
-    for pid in (0..PLAYERS).cycle() {
+    for pid in (0..2).cycle() {
         let triple_roll = 3 * rolls + 6;
         players[pid] = players[pid].advance(triple_roll);
         rolls += 3;
@@ -37,10 +34,9 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    let positions: ArrayVec<usize, PLAYERS> = input
+    let mut positions = input
         .lines()
-        .map(|line| line.split_whitespace().last().unwrap().parse().unwrap())
-        .collect();
+        .map(|line| line.split_whitespace().last().unwrap().parse().unwrap());
 
     // there are 27 different universes generated after 3 dice rolls. this precomputes those
     // possible rolls and how many universes generated the same sum of 3 dice rolls
@@ -78,8 +74,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     let (p1wins, p2wins) = inner(
         &dice_roll_universes,
         &mut FxHashMap::default(),
-        Player::new(positions[0]),
-        Player::new(positions[1]),
+        Player::new(positions.next().unwrap()),
+        Player::new(positions.next().unwrap()),
     );
     Ok(p1wins.max(p2wins))
 }
