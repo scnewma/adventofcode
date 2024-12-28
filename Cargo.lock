@@ -93,6 +93,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc19"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arrayvec",
+ "bittle 0.6.0",
+ "bytes",
+ "clap 4.3.11",
+ "criterion",
+ "edit-distance",
+ "fxhash",
+ "itertools",
+ "num",
+ "polyfit-rs",
+ "rayon",
+ "regex",
+ "rstest",
+ "string-interner",
+]
+
+[[package]]
 name = "aoc21"
 version = "0.1.0"
 dependencies = [
