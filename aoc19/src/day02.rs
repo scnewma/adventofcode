@@ -47,7 +47,7 @@ fn eval_intcode(memory: &mut [usize]) -> usize {
         ip += 4;
     }
 
-    return memory[0];
+    memory[0]
 }
 
 fn parse_input(input: &str) -> Vec<usize> {
