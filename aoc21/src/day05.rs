@@ -51,8 +51,8 @@ impl Grid {
     }
 
     fn cover(&mut self, line: &Line) {
-        let mut pos = (line.0 .0, line.0 .1);
-        let end = (line.1 .0, line.1 .1);
+        let mut pos = (line.0.0, line.0.1);
+        let end = (line.1.0, line.1.1);
 
         // mark the starting position
         self.0[pos.0][pos.1] += 1;
@@ -115,11 +115,11 @@ struct Line(Point, Point);
 
 impl Line {
     fn is_horz(&self) -> bool {
-        self.0 .1 == self.1 .1
+        self.0.1 == self.1.1
     }
 
     fn is_vert(&self) -> bool {
-        self.0 .0 == self.1 .0
+        self.0.0 == self.1.0
     }
 
     fn is_diag(&self) -> bool {

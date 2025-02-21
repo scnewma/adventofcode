@@ -1,5 +1,5 @@
 use crate::SolveInfo;
-use itertools::{iproduct, Either};
+use itertools::{Either, iproduct};
 use take_until::TakeUntilExt;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {
@@ -114,8 +114,8 @@ fn add(u: usize, i: i32) -> usize {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day08.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day08.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day08.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day08.input.txt");
 
     #[test]
     fn test_part_one_sample() {

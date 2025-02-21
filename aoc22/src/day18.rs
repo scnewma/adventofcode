@@ -126,11 +126,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
 // returns None if the provided position is outside of the bounds of the cube
 fn safe_index((x, y, z): &(u32, u32, u32)) -> Option<usize> {
     let idx = z + y * SIZE + x * SIZE * SIZE;
-    if idx > VOL {
-        None
-    } else {
-        Some(idx as usize)
-    }
+    if idx > VOL { None } else { Some(idx as usize) }
 }
 
 fn neighbors(pos: &(u32, u32, u32)) -> Neighbors {
@@ -201,8 +197,8 @@ impl Iterator for Neighbors {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day18.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day18.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day18.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day18.input.txt");
 
     #[test]
     fn test_part_one_sample() {

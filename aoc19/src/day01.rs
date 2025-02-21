@@ -18,11 +18,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 pub fn part02(input: &str) -> anyhow::Result<usize> {
     fn fuel_req(mass: usize) -> usize {
         let fuel = (mass / 3).saturating_sub(2);
-        if fuel == 0 {
-            0
-        } else {
-            fuel + fuel_req(fuel)
-        }
+        if fuel == 0 { 0 } else { fuel + fuel_req(fuel) }
     }
 
     Ok(input

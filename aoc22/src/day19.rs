@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use nom::{bytes::complete::tag, character::complete, sequence::preceded, Finish, IResult};
+use nom::{Finish, IResult, bytes::complete::tag, character::complete, sequence::preceded};
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::SolveInfo;
@@ -213,8 +213,8 @@ fn parse_blueprint(input: &str) -> IResult<&str, Blueprint> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day19.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day19.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day19.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day19.input.txt");
 
     #[test]
     fn test_part_one_sample() {

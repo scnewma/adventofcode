@@ -17,7 +17,7 @@ pub fn part01(input: &str) -> anyhow::Result<i64> {
         let mut zeros = 0;
 
         for num in &report {
-            let bit = num >> i & 1;
+            let bit = (num >> i) & 1;
             if bit == 1 {
                 ones += 1;
             } else {
@@ -56,7 +56,7 @@ fn find_rating(report: &[u16], width: usize, cond: Cond) -> u16 {
         let mut zeros = 0;
 
         for num in report.iter() {
-            let bit = num >> i & 1;
+            let bit = (num >> i) & 1;
             if bit == 1 {
                 ones += 1;
             } else {
@@ -67,16 +67,16 @@ fn find_rating(report: &[u16], width: usize, cond: Cond) -> u16 {
         match cond {
             Cond::MostCommon => {
                 if ones >= zeros {
-                    report.retain(|num| num >> i & 1 == 1);
+                    report.retain(|num| (num >> i) & 1 == 1);
                 } else {
-                    report.retain(|num| num >> i & 1 == 0);
+                    report.retain(|num| (num >> i) & 1 == 0);
                 }
             }
             Cond::LeastCommon => {
                 if ones < zeros {
-                    report.retain(|num| num >> i & 1 == 1);
+                    report.retain(|num| (num >> i) & 1 == 1);
                 } else {
-                    report.retain(|num| num >> i & 1 == 0);
+                    report.retain(|num| (num >> i) & 1 == 0);
                 }
             }
         }

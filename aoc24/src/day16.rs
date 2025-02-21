@@ -174,11 +174,7 @@ impl Direction for u8 {
     }
 
     fn turn_counter_clockwise(&self) -> Self {
-        if *self == 0 {
-            3
-        } else {
-            self - 1
-        }
+        if *self == 0 { 3 } else { self - 1 }
     }
 }
 

@@ -93,8 +93,8 @@ mod tests {
     use super::*;
     use rstest::rstest;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day25.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day25.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day25.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day25.input.txt");
 
     #[rstest]
     #[case("1=-0-2", 1747)]

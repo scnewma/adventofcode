@@ -140,11 +140,7 @@ fn best_hand(hand: &Hand) -> usize {
             // new_card replaces jokers with the replacement card
             macro_rules! new_card {
                 ( $card:expr) => {
-                    if $card == 'J' {
-                        r
-                    } else {
-                        $card
-                    }
+                    if $card == 'J' { r } else { $card }
                 };
             }
 

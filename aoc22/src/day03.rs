@@ -52,8 +52,8 @@ fn calc_priority(ch: char) -> u32 {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day03.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day03.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day03.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day03.input.txt");
 
     #[test]
     fn test_part_one_sample() {

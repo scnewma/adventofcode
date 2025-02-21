@@ -1,6 +1,6 @@
 use std::collections::{HashSet, VecDeque};
 
-use itertools::{iproduct, Itertools};
+use itertools::{Itertools, iproduct};
 use polyfit_rs::polyfit_rs::polyfit;
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {

@@ -1,9 +1,9 @@
 use arrayvec::ArrayVec;
 use nom::{
+    IResult,
     bytes::complete::tag,
     character::complete,
     sequence::{preceded, separated_pair},
-    IResult,
 };
 
 use crate::SolveInfo;
@@ -159,8 +159,8 @@ fn parse_point(input: &str) -> IResult<&str, Point> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day15.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day15.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day15.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day15.input.txt");
 
     #[test]
     fn test_part_one_sample() {

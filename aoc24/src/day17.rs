@@ -1,5 +1,5 @@
 use arrayvec::ArrayVec;
-use itertools::{iproduct, Itertools};
+use itertools::{Itertools, iproduct};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {

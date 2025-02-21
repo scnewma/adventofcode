@@ -2,7 +2,7 @@ use std::{cmp::Ordering, str::FromStr};
 
 use itertools::Itertools;
 use nom::{
-    branch::alt, bytes::complete::tag, multi::separated_list0, sequence::delimited, Finish, IResult,
+    Finish, IResult, branch::alt, bytes::complete::tag, multi::separated_list0, sequence::delimited,
 };
 
 use crate::SolveInfo;
@@ -119,8 +119,8 @@ fn parse_number_element(input: &str) -> IResult<&str, Element> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day13.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day13.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day13.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day13.input.txt");
 
     #[test]
     fn test_element_cmp_1() {

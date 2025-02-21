@@ -1,6 +1,6 @@
+use Compound::*;
 use arrayvec::ArrayVec;
 use std::str::FromStr;
-use Compound::*;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
