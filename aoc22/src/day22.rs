@@ -574,9 +574,9 @@ fn rotate_left<T: Clone>(matrix: Vec<Vec<T>>) -> Vec<Vec<T>> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day22.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day22.input.txt");
-    const TEST: &'static str = ".......#.#..
+    const SAMPLE: &str = include_str!("../inputs/day22.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day22.input.txt");
+    const TEST: &str = ".......#.#..
 .....#......
 ....#.....#.
 .#..........

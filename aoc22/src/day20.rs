@@ -87,8 +87,8 @@ fn next_pos<V>(pos: usize, amt: isize, vec: &[V]) -> usize {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day20.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day20.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day20.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day20.input.txt");
 
     #[test]
     fn test_part_one_sample() {

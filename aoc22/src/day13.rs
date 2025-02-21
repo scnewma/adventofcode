@@ -119,8 +119,8 @@ fn parse_number_element(input: &str) -> IResult<&str, Element> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day13.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day13.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day13.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day13.input.txt");
 
     #[test]
     fn test_element_cmp_1() {

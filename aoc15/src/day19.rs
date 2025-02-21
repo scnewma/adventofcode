@@ -139,7 +139,7 @@ fn calculate_molecules(
     for (src, rep) in replacements {
         for (i, _) in current[start..].match_indices(src) {
             let mut new = current[..start + i].to_string();
-            new.write_str(&rep).unwrap();
+            new.write_str(rep).unwrap();
             new.write_str(&current[start + i + src.len()..]).unwrap();
             molecules.insert(new);
         }

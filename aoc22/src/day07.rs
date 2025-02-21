@@ -90,8 +90,8 @@ fn parse_input(input: &str) -> anyhow::Result<HashMap<String, u32>> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day07.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day07.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day07.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day07.input.txt");
 
     #[test]
     fn test_part_one_sample() {

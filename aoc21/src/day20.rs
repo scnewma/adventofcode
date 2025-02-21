@@ -53,14 +53,7 @@ fn solve(input: &str, steps: usize) -> usize {
 
         for r in min_r - size_inc..=max_r + size_inc {
             for c in min_c - size_inc..=max_c + size_inc {
-                let index = img.get(&(r - 1, c - 1)).unwrap_or(&inf_state) << 8
-                    | img.get(&(r - 1, c)).unwrap_or(&inf_state) << 7
-                    | img.get(&(r - 1, c + 1)).unwrap_or(&inf_state) << 6
-                    | img.get(&(r, c - 1)).unwrap_or(&inf_state) << 5
-                    | img.get(&(r, c)).unwrap_or(&inf_state) << 4
-                    | img.get(&(r, c + 1)).unwrap_or(&inf_state) << 3
-                    | img.get(&(r + 1, c - 1)).unwrap_or(&inf_state) << 2
-                    | img.get(&(r + 1, c)).unwrap_or(&inf_state) << 1
+                let index = (img.get(&(r - 1, c - 1)).unwrap_or(&inf_state) << 8) | (img.get(&(r - 1, c)).unwrap_or(&inf_state) << 7) | (img.get(&(r - 1, c + 1)).unwrap_or(&inf_state) << 6) | (img.get(&(r, c - 1)).unwrap_or(&inf_state) << 5) | (img.get(&(r, c)).unwrap_or(&inf_state) << 4) | (img.get(&(r, c + 1)).unwrap_or(&inf_state) << 3) | (img.get(&(r + 1, c - 1)).unwrap_or(&inf_state) << 2) | (img.get(&(r + 1, c)).unwrap_or(&inf_state) << 1)
                     | img.get(&(r + 1, c + 1)).unwrap_or(&inf_state);
 
                 newimg.insert((r, c), enhancement_algo[index]);

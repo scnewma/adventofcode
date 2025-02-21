@@ -154,10 +154,10 @@ impl<'a> Simulation<'a> {
                     if rock[2] & 1 == 0
                         && rock[3] & 1 == 0
                         // check if hit rock
-                        && self.grid[y] & rock[3] >> 1 == 0
-                        && self.grid[y - 1] & rock[2] >> 1 == 0
-                        && self.grid[y - 2] & rock[1] >> 1 == 0
-                        && self.grid[y - 3] & rock[0] >> 1 == 0
+                        && self.grid[y] & (rock[3] >> 1) == 0
+                        && self.grid[y - 1] & (rock[2] >> 1) == 0
+                        && self.grid[y - 2] & (rock[1] >> 1) == 0
+                        && self.grid[y - 3] & (rock[0] >> 1) == 0
                     {
                         rock[0] >>= 1;
                         rock[1] >>= 1;
@@ -202,15 +202,15 @@ impl<'a> Simulation<'a> {
 
 #[inline]
 fn shl_unchecked(line: u8) -> u8 {
-    line << 1 & 0b01111111u8
+    (line << 1) & 0b01111111u8
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day17.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day17.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day17.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day17.input.txt");
 
     #[test]
     fn test_part_one_sample() {

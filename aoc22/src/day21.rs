@@ -305,8 +305,8 @@ impl FromStr for Op {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day21.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day21.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day21.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day21.input.txt");
 
     #[test]
     fn test_part_one_sample() {

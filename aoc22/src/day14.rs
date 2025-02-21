@@ -128,8 +128,8 @@ fn parse_input(input: &str) -> anyhow::Result<HashSet<Point>> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day14.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day14.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day14.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day14.input.txt");
 
     #[test]
     fn test_part_one_sample() {

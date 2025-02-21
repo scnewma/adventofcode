@@ -213,9 +213,9 @@ trait Blizzard {
 impl Blizzard for u8 {
     fn is_moving(&self, dir: Direction) -> bool {
         match dir {
-            Direction::Up => self >> 1 & 1 == 1,
-            Direction::Down => self >> 2 & 1 == 1,
-            Direction::Left => self >> 3 & 1 == 1,
+            Direction::Up => (self >> 1) & 1 == 1,
+            Direction::Down => (self >> 2) & 1 == 1,
+            Direction::Left => (self >> 3) & 1 == 1,
             Direction::Right => self & 1 == 1,
         }
     }
@@ -246,8 +246,8 @@ impl Blizzard for u8 {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day24.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day24.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day24.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day24.input.txt");
 
     #[test]
     fn test_part_one_sample() {

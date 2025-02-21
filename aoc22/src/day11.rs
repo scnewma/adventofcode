@@ -149,8 +149,8 @@ enum Op {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day11.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day11.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day11.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day11.input.txt");
 
     #[test]
     fn test_part_one_sample() {

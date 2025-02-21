@@ -51,8 +51,8 @@ fn collect_capacity(input: &str, k: usize) -> anyhow::Result<i64> {
 mod tests {
     use super::*;
 
-    const SAMPLE: &'static str = include_str!("../inputs/day01.sample.txt");
-    const INPUT: &'static str = include_str!("../inputs/day01.input.txt");
+    const SAMPLE: &str = include_str!("../inputs/day01.sample.txt");
+    const INPUT: &str = include_str!("../inputs/day01.input.txt");
 
     #[test]
     fn test_part_one_sample() {
