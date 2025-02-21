@@ -3,11 +3,11 @@ use std::{collections::VecDeque, str::FromStr};
 use anyhow::Context;
 use fxhash::FxHashMap;
 use nom::{
+    Finish, IResult, Parser,
     branch::alt,
     bytes::complete::tag,
     character::complete::{self, alpha1},
     sequence::{preceded, separated_pair, tuple},
-    Finish, IResult, Parser,
 };
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {

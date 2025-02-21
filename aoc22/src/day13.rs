@@ -2,7 +2,7 @@ use std::{cmp::Ordering, str::FromStr};
 
 use itertools::Itertools;
 use nom::{
-    branch::alt, bytes::complete::tag, multi::separated_list0, sequence::delimited, Finish, IResult,
+    Finish, IResult, branch::alt, bytes::complete::tag, multi::separated_list0, sequence::delimited,
 };
 
 use crate::SolveInfo;

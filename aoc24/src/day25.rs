@@ -1,4 +1,4 @@
-use itertools::{iproduct, Either};
+use itertools::{Either, iproduct};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {

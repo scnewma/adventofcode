@@ -2,10 +2,10 @@ use anyhow::Context;
 use fxhash::{FxHashMap, FxHashSet};
 use itertools::Itertools;
 use nom::{
+    IResult,
     bytes::complete::tag,
     character::complete::{self, alpha1},
     sequence::{preceded, separated_pair},
-    IResult,
 };
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<crate::SolveInfo> {

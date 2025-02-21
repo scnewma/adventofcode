@@ -6,12 +6,12 @@ use std::{
 };
 
 use nom::{
+    IResult,
     branch::alt,
     bytes::complete::{tag, take},
     character::complete,
     multi::separated_list0,
     sequence::preceded,
-    IResult,
 };
 
 use crate::SolveInfo;
@@ -57,8 +57,8 @@ pub fn part02(input: &str) -> anyhow::Result<u16> {
     Ok(observed
         .iter()
         .tuple_combinations::<(_, _)>()
-        .filter(|perms| *perms.0 .0 & *perms.1 .0 == 0)
-        .map(|perms| perms.0 .1 + perms.1 .1)
+        .filter(|perms| *perms.0.0 & *perms.1.0 == 0)
+        .map(|perms| perms.0.1 + perms.1.1)
         .max()
         .unwrap())
 }

@@ -1,5 +1,5 @@
 use crate::SolveInfo;
-use itertools::{iproduct, Either};
+use itertools::{Either, iproduct};
 use take_until::TakeUntilExt;
 
 pub fn run(input: &str, _: bool) -> anyhow::Result<SolveInfo> {

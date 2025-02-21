@@ -1,6 +1,6 @@
 use fxhash::{FxHashMap, FxHashSet};
 use itertools::Itertools;
-use string_interner::{symbol::SymbolU32, StringInterner};
+use string_interner::{StringInterner, symbol::SymbolU32};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {

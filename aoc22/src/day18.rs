@@ -126,11 +126,7 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
 // returns None if the provided position is outside of the bounds of the cube
 fn safe_index((x, y, z): &(u32, u32, u32)) -> Option<usize> {
     let idx = z + y * SIZE + x * SIZE * SIZE;
-    if idx > VOL {
-        None
-    } else {
-        Some(idx as usize)
-    }
+    if idx > VOL { None } else { Some(idx as usize) }
 }
 
 fn neighbors(pos: &(u32, u32, u32)) -> Neighbors {

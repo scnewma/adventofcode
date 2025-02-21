@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use nom::{bytes::complete::tag, character::complete, sequence::preceded, Finish, IResult};
+use nom::{Finish, IResult, bytes::complete::tag, character::complete, sequence::preceded};
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::SolveInfo;

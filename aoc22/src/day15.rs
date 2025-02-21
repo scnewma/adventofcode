@@ -1,9 +1,9 @@
 use arrayvec::ArrayVec;
 use nom::{
+    IResult,
     bytes::complete::tag,
     character::complete,
     sequence::{preceded, separated_pair},
-    IResult,
 };
 
 use crate::SolveInfo;
