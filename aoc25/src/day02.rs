@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -24,7 +26,24 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let mut result = 0;
+    for range in input.trim().split(',') {
+        let (start, end) = range.split_once('-').unwrap();
+        let start = start.parse::<usize>()?;
+        let end = end.parse::<usize>()?;
+
+        for id in start..=end {
+            let s = id.to_string();
+            let buf = s.as_bytes();
+            for n in 1..=buf.len() / 2 {
+                if buf.chunks(n).all_equal() {
+                    result += id;
+                    break;
+                }
+            }
+        }
+    }
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -42,6 +61,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(35950619148, ans);
     }
 }
