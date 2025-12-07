@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "aoc25",
     "aoc24",
     "aoc23",
     "aoc22",
