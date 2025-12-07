@@ -11,8 +11,6 @@ pub mod day01;
 // pub mod day11;
 // pub mod day12;
 
-pub mod topsort;
-
 pub struct SolveInfo {
     pub part01: String,
     pub part02: String,
