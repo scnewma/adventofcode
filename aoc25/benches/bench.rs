@@ -5,7 +5,7 @@ macro_rules! gen_benches {
         fn criterion_benchmark(c: &mut Criterion) {
             $(
                 {
-                    use aoc24::$day;
+                    use aoc25::$day;
                     const INPUT: &str = include_str!(concat!("../inputs/", stringify!($day), ".input.txt"));
                     c.bench_function(concat!(stringify!($day), "::part01"), |b| b
                         .iter(|| $day::part01(INPUT)));

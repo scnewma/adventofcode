@@ -1,3 +1,5 @@
+use num::Integer;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -7,28 +9,79 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
     let mut dial = 50isize;
-    let mut nzeros = 0;
-    for line in input.lines() {
-        let (dir, dist) = line.split_at(1);
-        // println!("dir: {}, dist: {}, dial: {}", dir, dist, dial);
-        let dist = dist.parse::<usize>()? % 100;
+    let mut nzeros = 0usize;
+
+    for (dir, dist) in parse_input(input) {
         match dir {
-            "L" => {
-                dial = dial.checked_sub_unsigned(dist).unwrap();
-                if dial < 0 {
-                    dial = 100 - dial.abs();
-                }
+            Direction::Left => {
+                dial = (dial.checked_sub_unsigned(dist).unwrap() + 100) % 100;
             }
-            "R" => dial = dial.checked_add_unsigned(dist).unwrap() % 100,
-            _ => anyhow::bail!("invalid direction"),
+            Direction::Right => {
+                dial = dial.checked_add_unsigned(dist).unwrap() % 100;
+            }
         }
-        nzeros += if dial == 0 { 1 } else { 0 };
+        if dial == 0 {
+            nzeros += 1;
+        }
     }
+
     Ok(nzeros)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let mut dial = 50isize;
+    let mut nzeros = 0usize;
+
+    for (dir, dist) in parse_input(input) {
+        let (full_rotations, dist) = dist.div_mod_floor(&100);
+        nzeros += full_rotations;
+
+        let new_dial = match dir {
+            Direction::Left => {
+                let mut new_dial = dial.checked_sub_unsigned(dist).unwrap();
+                if new_dial < 0 {
+                    new_dial = 100 - new_dial.abs();
+                    if dial != 0 {
+                        nzeros += 1;
+                    }
+                }
+                new_dial
+            }
+            Direction::Right => {
+                let new_dial = dial.checked_add_unsigned(dist).unwrap() % 100;
+                if dial > new_dial && new_dial != 0 {
+                    nzeros += 1;
+                }
+                new_dial
+            }
+        };
+
+        if new_dial == 0 {
+            nzeros += 1;
+        }
+
+        dial = new_dial;
+    }
+
+    Ok(nzeros)
+}
+
+enum Direction {
+    Left,
+    Right,
+}
+
+fn parse_input(input: &str) -> impl Iterator<Item = (Direction, usize)> + '_ {
+    input.lines().map(|line| {
+        let (dir, dist) = line.split_at(1);
+        let dist = dist.trim().parse::<usize>().unwrap();
+        let direction = match dir {
+            "L" => Direction::Left,
+            "R" => Direction::Right,
+            _ => panic!("invalid direction"),
+        };
+        (direction, dist)
+    })
 }
 
 #[cfg(test)]
@@ -40,12 +93,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1076, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(6379, ans);
     }
 }
