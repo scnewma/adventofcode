@@ -46,7 +46,7 @@ fn do_factors<F: FnMut(usize)>(x: usize, mut yld: F) {
     yld(x);
     let root = sqrt(x);
     for n in 2..=root {
-        if x % n == 0 {
+        if x.is_multiple_of(n) {
             yld(n);
             let comp = x / n;
             if comp != n {

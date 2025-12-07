@@ -64,10 +64,10 @@ impl ElevationMap {
 
             for (dr, dc) in Self::DELTAS {
                 let neigh = (point.0 + dr, point.1 + dc);
-                if let Some(elevation) = self.grid.get(&neigh) {
-                    if self.grid[&point] as u8 + 1 >= *elevation as u8 {
-                        queue.push_back((neigh, steps + 1));
-                    }
+                if let Some(elevation) = self.grid.get(&neigh)
+                    && self.grid[&point] as u8 + 1 >= *elevation as u8
+                {
+                    queue.push_back((neigh, steps + 1));
                 }
             }
         }

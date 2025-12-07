@@ -62,9 +62,7 @@ fn solve(input: &str, num_robots: usize) -> usize {
         .collect();
 
     // if we are the last robot, we control the numerical pad instead of the directional pad
-    let sequence = std::iter::repeat(&dir_paths)
-        .take(num_robots - 1)
-        .chain([&numerical_paths]);
+    let sequence = std::iter::repeat_n(&dir_paths, num_robots - 1).chain([&numerical_paths]);
 
     // calulate cost for robotN to direct robotN+1
     for grid_paths in sequence {

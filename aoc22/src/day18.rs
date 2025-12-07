@@ -78,10 +78,10 @@ pub fn part02(input: &str) -> anyhow::Result<u32> {
 
         // this location is an air block, union it with any neighboring air blocks
         for neighbor in neighbors(&pos) {
-            if !cubes.contains(&neighbor) {
-                if let (Some(pi), Some(ni)) = (safe_index(&pos), safe_index(&neighbor)) {
-                    partitions.union(pi, ni);
-                }
+            if !cubes.contains(&neighbor)
+                && let (Some(pi), Some(ni)) = (safe_index(&pos), safe_index(&neighbor))
+            {
+                partitions.union(pi, ni);
             }
         }
     }
@@ -184,10 +184,11 @@ impl Iterator for Neighbors {
                 self.pos.0.checked_add_signed(delta.0),
                 self.pos.1.checked_add_signed(delta.1),
                 self.pos.2.checked_add_signed(delta.2),
-            ) {
-                if x < self.max_pos && y < self.max_pos && z < self.max_pos {
-                    break Some((x, y, z));
-                }
+            ) && x < self.max_pos
+                && y < self.max_pos
+                && z < self.max_pos
+            {
+                break Some((x, y, z));
             }
         }
     }

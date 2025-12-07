@@ -22,7 +22,7 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
     Ok((min..=max)
         .filter(|n| {
             let digits = digits(*n);
-            is_sorted(digits) && counts(digits).iter().any(|c| *c == 2)
+            is_sorted(digits) && counts(digits).contains(&2)
         })
         .count())
 }

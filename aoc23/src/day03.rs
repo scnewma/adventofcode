@@ -37,7 +37,8 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
                 adjsym = adjsym
                     || grid
                         .points
-                        .get(&(nr, nc)).is_some_and(|v| !(*v).is_ascii_digit() && *v != '.');
+                        .get(&(nr, nc))
+                        .is_some_and(|v| !(*v).is_ascii_digit() && *v != '.');
             }
         }
         if adjsym {
