@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
         part01: part01(input)?.to_string(),
@@ -6,6 +8,43 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
 }
 
 pub fn part01(input: &str) -> anyhow::Result<usize> {
+    let (ranges, ingredients) = parse_input(input);
+    let merged = merge_ranges(ranges);
+
+    Ok(ingredients
+        .into_iter()
+        .filter(|i| merged.iter().any(|r| r.contains(i)))
+        .count())
+}
+
+pub fn part02(input: &str) -> anyhow::Result<usize> {
+    let (ranges, _) = parse_input(input);
+    let merged = merge_ranges(ranges);
+
+    Ok(merged
+        .into_iter()
+        .map(|range| range.end() - range.start() + 1)
+        .sum())
+}
+
+fn merge_ranges(mut ranges: Vec<RangeInclusive<usize>>) -> Vec<RangeInclusive<usize>> {
+    ranges.sort_by(|a, b| a.start().cmp(b.start()));
+
+    let mut merged = vec![ranges.first().unwrap().clone()];
+    for range in &ranges[1..] {
+        let last = merged.last().unwrap().clone();
+        if last.contains(range.start()) {
+            let new = RangeInclusive::new(*last.start(), *last.end().max(range.end()));
+            let len = merged.len();
+            merged[len - 1] = new;
+        } else {
+            merged.push(range.clone());
+        }
+    }
+    merged
+}
+
+fn parse_input(input: &str) -> (Vec<RangeInclusive<usize>>, Vec<usize>) {
     let (ranges, ingredients) = input.split_once("\n\n").unwrap();
     let ingredients: Vec<usize> = ingredients.lines().map(|l| l.parse().unwrap()).collect();
     let ranges: Vec<_> = ranges
@@ -15,24 +54,10 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
             let l: usize = l.parse().unwrap();
             let r: usize = r.parse().unwrap();
             assert!(l <= r, "line: {ln}");
-            (l, r)
+            l..=r
         })
         .collect();
-
-    let mut n_fresh_ingredients = 0;
-    for i in ingredients {
-        for (lo, hi) in &ranges {
-            if (*lo..=*hi).contains(&i) {
-                n_fresh_ingredients += 1;
-                break;
-            }
-        }
-    }
-    Ok(n_fresh_ingredients)
-}
-
-pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    (ranges, ingredients)
 }
 
 #[cfg(test)]
@@ -50,6 +75,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(350780324308385, ans);
     }
 }
