@@ -5,33 +5,40 @@ pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     })
 }
 
-pub fn part01(input: &str) -> anyhow::Result<u32> {
-    let mut sum = 0;
-    for battery_bank in input.lines() {
-        let batteries: Vec<char> = battery_bank.chars().collect();
-        let mut l = '0';
-        let mut li = 0;
-        for i in 0..batteries.len() - 1 {
-            if batteries[i] > l {
-                l = batteries[i];
-                li = i;
-            }
-        }
-        let mut r = '0';
-        for i in li + 1..batteries.len() {
-            if batteries[i] > r {
-                r = batteries[i];
-            }
-        }
-
-        let joltage = l.to_digit(10).unwrap() * 10 + r.to_digit(10).unwrap();
-        sum += joltage;
-    }
-    Ok(sum)
+pub fn part01(input: &str) -> anyhow::Result<usize> {
+    solve(input, 2)
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    solve(input, 12)
+}
+
+fn solve(input: &str, n_turn_on: usize) -> anyhow::Result<usize> {
+    Ok(input
+        .lines()
+        .map(|line| max_joltage(&line.chars().collect::<Vec<char>>(), n_turn_on))
+        .sum())
+}
+
+fn max_joltage(battery_bank: &[char], n_turn_on: usize) -> usize {
+    let mut joltage = 0;
+    let mut start = 0;
+    for reserved in (0..n_turn_on).rev() {
+        let mut battery_no = '0';
+        for (i, battery) in battery_bank
+            .iter()
+            .enumerate()
+            .take(battery_bank.len() - reserved)
+            .skip(start)
+        {
+            if *battery > battery_no {
+                battery_no = *battery;
+                start = i + 1;
+            }
+        }
+        joltage = joltage * 10 + battery_no.to_digit(10).unwrap() as usize;
+    }
+    joltage
 }
 
 #[cfg(test)]
@@ -43,12 +50,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(17109, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(169347417057382, ans);
     }
 }
