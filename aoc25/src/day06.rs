@@ -56,7 +56,8 @@ pub fn part02(input: &str) -> anyhow::Result<usize> {
                     num = num * 10 + n as usize
                 }
             }
-            if num == 0 { // blank column
+            if num == 0 {
+                // blank column
                 continue;
             }
 
