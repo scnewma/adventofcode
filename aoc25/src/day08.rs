@@ -47,7 +47,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     (0..boxes.len()).for_each(|i| {
         _ = circuits
             .entry(uf.find(i))
-            .and_modify(|len| *len+=1)
+            .and_modify(|len| *len += 1)
             .or_insert(1)
     });
 
