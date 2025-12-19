@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub fn run(input: &str) -> anyhow::Result<crate::SolveInfo> {
     Ok(crate::SolveInfo {
@@ -40,7 +40,37 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
 }
 
 pub fn part02(input: &str) -> anyhow::Result<usize> {
-    Ok(0)
+    let mut tachyons = HashMap::new();
+    let mut splitters = HashSet::new();
+    let max_r = input.lines().count();
+    for (r, line) in input.lines().enumerate() {
+        for (c, ch) in line.chars().enumerate() {
+            match ch {
+                'S' => _ = tachyons.insert((r, c), 1),
+                '^' => _ = splitters.insert((r, c)),
+                _ => (),
+            };
+        }
+    }
+
+    for _ in 0..max_r {
+        let mut next = HashMap::new();
+        for ((r, c), n) in tachyons {
+            if splitters.contains(&(r + 1, c)) {
+                next.entry((r + 1, c - 1))
+                    .and_modify(|e| *e += n)
+                    .or_insert(n);
+                next.entry((r + 1, c + 1))
+                    .and_modify(|e| *e += n)
+                    .or_insert(n);
+            } else {
+                next.entry((r + 1, c)).and_modify(|e| *e += n).or_insert(n);
+            }
+        }
+        tachyons = next;
+    }
+    let timelines = tachyons.values().sum();
+    Ok(timelines)
 }
 
 #[cfg(test)]
@@ -52,12 +82,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let ans = part01(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1516, ans);
     }
 
     #[test]
     fn test_part_two() {
         let ans = part02(INPUT).unwrap();
-        assert_eq!(0, ans);
+        assert_eq!(1393669447690, ans);
     }
 }
