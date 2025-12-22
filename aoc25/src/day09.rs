@@ -19,7 +19,7 @@ pub fn part01(input: &str) -> anyhow::Result<usize> {
     for combo in tiles.into_iter().combinations(2) {
         let (a, b) = (combo[0], combo[1]);
 
-        let area = (((a.0 - b.0).abs()+1) * ((a.1 - b.1).abs()+1)) as usize;
+        let area = (((a.0 - b.0).abs() + 1) * ((a.1 - b.1).abs() + 1)) as usize;
         max_area = max_area.max(area);
     }
     Ok(max_area)
