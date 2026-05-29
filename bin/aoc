@@ -16,8 +16,15 @@ if (( HOUR >= 21 )); then
 fi
 
 FNAME="input"
-while getopts ":ed:y:" opt; do
+MODE="run"
+while getopts ":bted:y:" opt; do
     case $opt in
+        b)
+            MODE="bench"
+            ;;
+        t)
+            MODE="test"
+            ;;
         e)
             FNAME="example"
             ;;
@@ -38,4 +45,14 @@ done
 DAY_FNAME="$(printf '%02d' "$DAY")"
 
 PKG="aoc$YEAR"
-cargo run --release -p "$PKG" "$DAY" < "$PKG/inputs/day$DAY_FNAME.$FNAME.txt"
+case "$MODE" in
+    bench)
+        cargo bench -p "$PKG" "day$DAY_FNAME"
+        ;;
+    test)
+        cargo test -p "$PKG" "day$DAY_FNAME"
+        ;;
+    run)
+        cargo run --release -p "$PKG" "$DAY" < "$PKG/inputs/day$DAY_FNAME.$FNAME.txt"
+        ;;
+esac
