@@ -5,6 +5,7 @@ members = [
     "aoc23",
     "aoc22",
     "aoc21",
+    "aoc20",
     "aoc19",
     "aoc15"
 ]

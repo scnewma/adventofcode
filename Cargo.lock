@@ -115,6 +115,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc20"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arrayvec",
+ "bittle 0.6.0",
+ "clap 4.5.30",
+ "criterion",
+ "edit-distance",
+ "fxhash",
+ "itertools",
+ "num",
+ "ordered-float",
+ "polyfit-rs",
+ "rayon",
+ "regex",
+ "rstest",
+ "string-interner",
+ "union-find",
+]
+
+[[package]]
 name = "aoc21"
 version = "0.1.0"
 dependencies = [

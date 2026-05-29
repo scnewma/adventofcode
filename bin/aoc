@@ -16,7 +16,7 @@ if (( HOUR >= 21 )); then
 fi
 
 FNAME="input"
-while getopts ":edy:" opt; do
+while getopts ":ed:y:" opt; do
     case $opt in
         e)
             FNAME="example"
