@@ -3,8 +3,9 @@ name: aoc-benchmark-readme
 description: |
   Generate or update an Advent of Code year README benchmark table with per-day
   Criterion timings. Use when asked to update benchmarks for aocYY, update
-  benchmarks for aocYY day N, create README performance measurements, benchmark
-  solved AoC days/parts, or make a README similar to aoc24/README.md.
+  benchmarks for aocYY day N, update benchmarks for YEAR day N (e.g. 2020 day 7),
+  create README performance measurements, benchmark solved AoC days/parts, or
+  make a README similar to aoc24/README.md.
 ---
 
 # AoC Benchmark README
